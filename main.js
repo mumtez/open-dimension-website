@@ -34,7 +34,7 @@
   var scenes = $$('[data-scene]').map(function (el) { return { el: el, kind: el.dataset.scene, theme: el.dataset.theme, top: 0, h: 0, p: 0 }; });
   var sceneBy = {}; scenes.forEach(function (s) { sceneBy[s.kind] = s; });
   var LABEL = { hero: ['00', 'Home'], vision: ['01', 'Vision'], products: ['02', 'Products'], studio: ['03', 'Studio'], contact: ['04', 'Contact'] };
-  var heroS = sceneBy.hero, visS = sceneBy.vision, prodS = sceneBy.products;
+  var heroS = sceneBy.hero, visS = sceneBy.vision, prodS = sceneBy.products, studS = sceneBy.studio;
 
   // Depth layers: positive depth moves faster than the scroll (front), negative slower (back).
   var layers = $$('[data-depth]').map(function (el) {
@@ -171,7 +171,7 @@
       }
       for (i = 0; i < layers.length; i++) {
         var l = layers[i], sc2 = l.scene, d;
-        if (sc2 === visS || sc2 === prodS) d = (sc2.p - 0.5) * vh;
+        if (sc2 === visS || sc2 === prodS || sc2 === studS) d = (sc2.p - 0.5) * vh;
         else if (sc2 === heroS) d = clamp(y / vh) * vh * 0.6;
         else d = vh / 2 - (sc2.top - y + sc2.h / 2);
         sty(l.el, 'translate', '0 ' + (-d * l.s).toFixed(1) + 'px');
@@ -436,8 +436,8 @@
   function drawRings(t) {
     var r = ringsEl.getBoundingClientRect(), k = r.width / 800, cx = r.left + r.width / 2, cy = r.top + r.height / 2, tm = motion ? t : 0;
     emitDashRing(cx, cy, 380 * k, 2 * k, 10 * k, 0, INK, 0.28, 1.2);
-    emitDashRing(cx, cy, 320 * k, 1 * k, 7 * k, tm * 0.00007, INK, 0.3, 1.2);
-    emitDashRing(cx, cy, 250 * k, 40 * k, 14 * k, -tm * 0.00004, INK, 0.28, 1.2);
+    emitDashRing(cx, cy, 320 * k, 1 * k, 7 * k, tm * 0.00007 + studS.p * 1.4, INK, 0.3, 1.2);
+    emitDashRing(cx, cy, 250 * k, 40 * k, 14 * k, -tm * 0.00004 - studS.p * 0.9, INK, 0.28, 1.2);
     emitCircle(cx, cy, 170 * k, 0, TAU, 90, INK, 0.26, 1.2);
   }
 
@@ -467,7 +467,7 @@
     for (i = 0; i < SR.length; i++) {
       sr = SR[i];
       if (sr.bot < 0 || sr.top > vh) continue;
-      var s = sr.s, light = s.theme === 'light', pinned = s === visS || s === prodS, hero = s === heroS, d;
+      var s = sr.s, light = s.theme === 'light', pinned = s === visS || s === prodS || s === studS, hero = s === heroS, d;
       if (pinned) d = (s.p - 0.5) * vh; else if (hero) d = clamp(y / vh) * vh * 0.6; else d = vh / 2 - (sr.top + s.h / 2);
       var off = (pinned || hero ? 0 : sr.top) + (motion ? d * (hero ? 0.18 : 0.2) : 0);
       var mcy = (pinned || hero) ? vh / 2 : sr.top + s.h / 2;
