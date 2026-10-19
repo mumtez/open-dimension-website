@@ -248,7 +248,7 @@
   var MAXSEG = 16000, SEGF = 10;
   var seg = new Float32Array(MAXSEG * SEGF), nseg = 0;
   var ranges = [];
-  var S = 1, W = 1, H = 1;
+  var S = 1, W = 1, H = 1, quality = 1;   // quality: adaptive render-scale multiplier
   var panes = [];
 
   var ATTRS = [[0, 2, 0], [1, 2, 8], [2, 4, 16], [3, 2, 32]];
@@ -356,7 +356,7 @@
 
   function resizeGL() {
     var dpr = window.devicePixelRatio || 1;
-    S = Math.min(dpr, 2);
+    S = Math.min(dpr, 2) * quality;
     var maxPx = 2.8e6; if (vw * vh * S * S > maxPx) S = Math.sqrt(maxPx / (vw * vh));
     W = Math.max(1, Math.round(vw * S)); H = Math.max(1, Math.round(vh * S));
     glc.width = W; glc.height = H;
@@ -695,9 +695,19 @@
   measure();
   if (glOK) { resizeGL(); }
 
-  var lastT = 0, lastY = window.scrollY, hudTick = 0;
+  var lastT = 0, lastY = window.scrollY, hudTick = 0, emaMs = 16, calm = 0;
   function tick(t) {
-    var dt = Math.min(0.05, Math.max(0.001, (t - (lastT || t - 16)) / 1000)); lastT = t;
+    var rawMs = t - (lastT || t - 16);
+    var dt = Math.min(0.05, Math.max(0.001, rawMs / 1000)); lastT = t;
+    // Adaptive quality: if frames run long, drop the render resolution a step; if there is headroom, recover it.
+    if (glOK && t0 && t - t0 > 3000) {
+      emaMs += (Math.min(rawMs, 100) - emaMs) * 0.06;
+      if (!(state.frame % 45)) {
+        if (emaMs > 24 && quality > 0.55) { quality = Math.max(0.55, quality * 0.86); resizeGL(); calm = 0; }
+        else if (emaMs < 15.5) { if (++calm > 6 && quality < 1) { quality = Math.min(1, quality * 1.08); resizeGL(); calm = 0; } }
+        else calm = 0;
+      }
+    }
     if (lenis) lenis.raf(t);
     var y = window.scrollY;
     state.dy = y - lastY; lastY = y;
