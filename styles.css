@@ -1,0 +1,189 @@
+/* Open Dimension. Everything visual (backgrounds, grid, wireframes, glass) is drawn by WebGL2 in #gl;
+   this file styles the text and layout on top, plus a plain CSS fallback for browsers without WebGL2. */
+
+:root {
+  --serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+
+  --black: #000;
+  --white: #f5f5f7;
+  --light: #f5f5f7;
+  --ink: #1d1d1f;
+  --cyan: #64d2ff;
+  --blue: #0a84ff;
+  --muted-dark: rgba(245,245,247,.62);
+  --muted-light: rgba(29,29,31,.6);
+  --ease: cubic-bezier(.22, .9, .2, 1);
+  --vh: 100vh;
+}
+@supports (height: 100svh) { :root { --vh: 100svh; } }
+
+* { box-sizing: border-box; }
+html { background: var(--black); }
+body {
+  margin: 0; background: transparent; color: var(--white);
+  font-family: var(--sans); font-size: 17px; line-height: 1.45;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+a { color: inherit; text-decoration: none; }
+h1, h2, h3, p { margin: 0; }
+main { position: relative; z-index: 1; }
+
+#gl { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; }
+@supports (height: 100svh) { #gl { height: 100svh; } }
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* ---------- Scenes ---------- */
+.scene { position: relative; overflow: clip; }
+.scene[data-theme="light"] { background: var(--light); color: var(--ink); }
+.scene[data-theme="dark"]  { background: var(--black); color: var(--white); }
+.gl .scene { background: transparent !important; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 20px; }
+[data-theme="dark"]  .eyebrow { color: var(--muted-dark); }
+[data-theme="light"] .eyebrow { color: var(--muted-light); }
+.stage { position: sticky; top: 0; height: var(--vh); overflow: clip; }
+
+/* Plain CSS grid, only for browsers without WebGL2 (the GL renderer draws its own). */
+.grid {
+  position: absolute; inset: -16vh 0; pointer-events: none;
+  --g1: rgba(255,255,255,.06); --g2: rgba(255,255,255,.13);
+  background-image:
+    linear-gradient(var(--g2) 1px, transparent 1px), linear-gradient(90deg, var(--g2) 1px, transparent 1px),
+    linear-gradient(var(--g1) 1px, transparent 1px), linear-gradient(90deg, var(--g1) 1px, transparent 1px);
+  background-size: 192px 192px, 192px 192px, 48px 48px, 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 25%, transparent 78%);
+          mask-image: radial-gradient(ellipse at 50% 50%, #000 25%, transparent 78%);
+}
+.scene[data-theme="light"] .grid { --g1: rgba(0,0,0,.05); --g2: rgba(0,0,0,.11); }
+.gl .grid { display: none; }
+
+/* ---------- Glass: CSS fallback; with WebGL2 the shader draws the pane and the element only holds content ---------- */
+.glass {
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, rgba(255,255,255,.2), rgba(255,255,255,.04));
+  -webkit-backdrop-filter: blur(12px) saturate(180%); backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255,255,255,.4); border-radius: 32px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 20px 44px -16px rgba(0,0,0,.45);
+}
+.gl .glass { background: none !important; border-color: transparent !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+@media (prefers-reduced-transparency: reduce) { .glass { background: rgba(40,40,46,.94); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+
+/* ---------- Nav: minimal ---------- */
+.nav {
+  position: fixed; z-index: 60; top: 14px; left: 50%; transform: translateX(-50%);
+  width: min(560px, calc(100% - 24px)); height: 46px; padding: 0 8px 0 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  border-radius: 999px; color: #fff; font: 500 13px/1 var(--sans); letter-spacing: .01em;
+  transition: color .6s var(--ease);
+}
+.nav[data-theme="light"] { color: var(--ink); }
+/* Softens page text that scrolls under the nav (DOM text sits above the GL glass); the 2px rim stays crisp. */
+.nav::before { content: ""; position: absolute; inset: 2px; border-radius: inherit; z-index: -1; pointer-events: none; -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px); }
+.brand { display: flex; align-items: center; gap: 9px; white-space: nowrap; font-weight: 600; }
+.brand-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 18%, transparent); }
+.links { position: relative; display: flex; gap: 2px; list-style: none; margin: 0; padding: 0; }
+.links a { display: block; padding: 8px 12px; opacity: .55; transition: opacity .35s var(--ease); }
+.links a:hover, .links a.is-active { opacity: 1; }
+.ind { position: absolute; bottom: -2px; left: 0; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; opacity: var(--po, 0); transform: translateX(calc(var(--px, 0px) + var(--pw, 0px) / 2)); transition: transform .7s var(--ease), opacity .3s; }
+.cta { padding: 8px 14px; border-radius: 999px; background: rgba(255,255,255,.14); transition: background .35s var(--ease); }
+.nav[data-theme="light"] .cta { background: rgba(0,0,0,.07); }
+.cta:hover { background: rgba(255,255,255,.26); }
+.nav[data-theme="light"] .cta:hover { background: rgba(0,0,0,.13); }
+
+/* ---------- 1. Hero ---------- */
+.hero { height: var(--vh); min-height: 560px; display: grid; place-items: center; text-align: center; }
+.tess { position: absolute; inset: 0; margin: auto; width: min(96vmin, 960px); height: min(96vmin, 960px); pointer-events: none; }
+.hero-inner { position: relative; z-index: 2; padding: 0 20px; will-change: transform, opacity; }
+h1 { font: 400 clamp(76px, 17vw, 210px)/.84 var(--serif); letter-spacing: -.04em; text-shadow: 0 2px 40px rgba(0,0,0,.55); }
+.ln { display: block; overflow: hidden; padding: .06em .04em .16em; margin: -.06em 0 -.16em; }
+.ln > span { display: block; }
+.grad { background: linear-gradient(100deg, #fff 10%, #9cd0ff 55%, #ffd2a8 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.dot { color: var(--blue); }
+.tagline { display: inline-block; margin-top: 30px; padding: 14px 30px; border-radius: 999px; font: 400 clamp(22px, 3vw, 34px)/1.1 var(--serif); letter-spacing: -.01em; color: #fff; }
+.hud { position: absolute; z-index: 2; font: 500 11px/1.7 var(--mono); letter-spacing: .12em; color: rgba(245,245,247,.5); }
+.hud b { font-weight: 500; color: var(--cyan); font-variant-numeric: tabular-nums; }
+.hud.tl { left: 28px; top: 84px; } .hud.tr { right: 28px; top: 84px; text-align: right; }
+.hud.bl { left: 28px; bottom: 30px; } .hud.br { right: 28px; bottom: 30px; text-align: right; }
+.scroll-hint { position: absolute; z-index: 2; bottom: 28px; left: 50%; width: 24px; height: 40px; margin-left: -12px; border: 1.5px solid rgba(255,255,255,.45); border-radius: 14px; }
+.scroll-hint span { position: absolute; left: 50%; top: 8px; width: 3px; height: 8px; margin-left: -1.5px; border-radius: 2px; background: #fff; animation: hint 1.9s var(--ease) infinite; }
+@keyframes hint { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(14px); } }
+
+/* Intro: headline lines rise out of a mask, then everything else fades in. */
+.motion .ln > span { transform: translateY(112%); animation: rise 1.5s var(--ease) forwards; }
+.motion .ln:nth-child(2) > span { animation-delay: .14s; }
+.motion .tagline { opacity: 0; animation: fadeup 1.2s var(--ease) .95s forwards; }
+.motion .hud, .motion .scroll-hint { opacity: 0; animation: fadein 1.4s ease 1.2s forwards; }
+@keyframes rise { to { transform: none; } }
+@keyframes fadeup { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes fadein { to { opacity: 1; } }
+
+/* ---------- 2. Vision ---------- */
+.vision { height: 280vh; }
+.vision .stage { display: grid; place-items: center; }
+.vision-copy { position: relative; z-index: 2; width: min(980px, calc(100% - 40px)); }
+.statement { font: 400 clamp(38px, 6.2vw, 84px)/1.02 var(--serif); letter-spacing: -.025em; }
+.word { opacity: .14; }
+.schematic { position: absolute; z-index: 0; width: min(78vmin, 760px); height: min(78vmin, 760px); right: 2vw; top: 50%; margin-top: calc(min(78vmin, 760px) / -2); color: #2a2a2e; }
+.lab { position: absolute; font: 500 11px/1 var(--mono); letter-spacing: .1em; opacity: 0; }
+.lens { position: absolute; z-index: 1; width: 36vmin; height: 36vmin; border-radius: 50%; right: 12vw; top: 28vh; will-change: transform; }
+
+/* ---------- 3. Products ---------- */
+.products { height: 320vh; }
+.products .stage { display: flex; flex-direction: column; justify-content: center; gap: 4vh; }
+.products-head { position: relative; z-index: 2; padding: 0 6vw; }
+.products-head h2 { font: 400 clamp(44px, 7vw, 96px)/.95 var(--serif); letter-spacing: -.03em; }
+.track { position: relative; z-index: 1; display: flex; gap: 8vw; padding: 0 6vw; width: max-content; will-change: transform; }
+.slot { position: relative; flex: none; width: min(78vw, 420px); }
+.art { position: absolute; width: 150%; aspect-ratio: 1; left: -25%; top: 50%; margin-top: -75%; pointer-events: none; }
+.card { position: relative; z-index: 2; height: min(52vh, 440px); padding: 26px 26px 24px; display: flex; flex-direction: column; will-change: transform; }
+.num { font: 500 12px/1 var(--mono); letter-spacing: .12em; opacity: .8; }
+.card h3 { margin-top: 14px; font: 400 clamp(40px, 5vw, 58px)/.92 var(--serif); letter-spacing: -.025em; }
+.card .sub { margin-top: 14px; font: 500 15px/1.3 var(--sans); opacity: .85; }
+.card .more { margin-top: auto; font: 500 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+
+/* ---------- 4. Studio ---------- */
+.studio { min-height: 100vh; display: grid; place-items: center; padding: 18vh 20px; text-align: center; }
+.studio-inner { position: relative; z-index: 1; }
+.studio h2 { font: 400 clamp(52px, 10vw, 140px)/.9 var(--serif); letter-spacing: -.035em; }
+.chips { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 44px; }
+.chip { position: relative; z-index: 2; padding: 14px 28px; border-radius: 999px; font: 600 16px/1 var(--sans); color: var(--ink); }
+.rings { position: absolute; width: min(120vmin, 1100px); height: min(120vmin, 1100px); left: 50%; top: 50%; margin: calc(min(120vmin, 1100px) / -2) 0 0 calc(min(120vmin, 1100px) / -2); pointer-events: none; }
+
+/* ---------- 5. Contact ---------- */
+.contact { min-height: 90vh; display: grid; place-items: center; text-align: center; padding: 14vh 20px 90px; }
+.contact-art { position: absolute; left: 0; right: 0; bottom: -6vh; height: 70vh; pointer-events: none; }
+.contact-inner { position: relative; z-index: 1; }
+.contact h2 { font: 400 clamp(60px, 12vw, 160px)/.88 var(--serif); letter-spacing: -.04em; }
+.contact-inner p { margin-top: 18px; color: var(--muted-dark); font: 400 clamp(22px, 3vw, 32px)/1.1 var(--serif); }
+.legal { position: absolute; z-index: 1; bottom: 24px; left: 0; right: 0; font: 11px/1.4 var(--mono); letter-spacing: .06em; color: rgba(245,245,247,.4); }
+
+/* ---------- Depth layers + scroll fade-ins ---------- */
+.motion [data-fade] { opacity: 0; transform: translate3d(0, 40px, 0); transition: opacity 1.1s var(--ease), transform 1.1s var(--ease); }
+.motion [data-fade].in { opacity: 1; transform: none; }
+
+/* ---------- Reduced motion: plain scrolling, nothing pinned ---------- */
+.no-motion .scene { height: auto; min-height: 0; }
+.no-motion .stage { position: static; height: auto; padding: 14vh 0; }
+.no-motion .word { opacity: 1; }
+.no-motion .lab { opacity: 1; }
+.no-motion .track { width: auto; overflow-x: auto; transform: none !important; padding-bottom: 20px; }
+.no-motion .scroll-hint span { animation: none; opacity: 1; }
+.no-motion .hero { height: var(--vh); }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 640px) {
+  .brand span { display: none; }
+  .nav { padding-left: 16px; }
+  .links a { padding: 8px 9px; }
+  .cta { padding: 8px 12px; }
+  .hud.tl, .hud.tr { top: 72px; }
+  .hud.tl, .hud.bl { left: 16px; } .hud.tr, .hud.br { right: 16px; }
+  .schematic { right: -22vmin; opacity: .8; }
+  .lens { right: -6vmin; }
+  .vision { height: 300vh; }
+}

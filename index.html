@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Dimension</title>
+<meta name="description" content="Open Dimension. Something new is on its way.">
+<meta name="theme-color" content="#000000">
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="stylesheet" href="styles.css">
+<script>
+  try { document.documentElement.classList.add(matchMedia('(prefers-reduced-motion: reduce)').matches ? 'no-motion' : 'motion'); } catch (e) {}
+</script>
+</head>
+<body>
+
+<!-- Everything visual (backgrounds, grid, wireframes, glass) is drawn here by WebGL2; the page text sits on top. -->
+<canvas id="gl" aria-hidden="true"></canvas>
+
+<nav class="nav glass" id="nav" data-theme="dark" aria-label="Main">
+  <a class="brand" href="#top"><i class="brand-dot" aria-hidden="true"></i><span>Open Dimension</span></a>
+  <ul class="links" id="links">
+    <li><a href="#vision" data-link="vision">Vision</a></li>
+    <li><a href="#products" data-link="products">Products</a></li>
+    <li><a href="#studio" data-link="studio">Studio</a></li>
+    <i class="ind" aria-hidden="true"></i>
+  </ul>
+  <a class="cta" href="#contact">Contact</a>
+</nav>
+
+<main>
+
+  <!-- 1. Hero -->
+  <section class="scene hero" id="top" data-scene="hero" data-theme="dark">
+    <div class="grid" aria-hidden="true"></div>
+    <div class="tess" id="tess" aria-hidden="true"></div>
+    <div class="hud tl" aria-hidden="true">OPEN DIMENSION<br>REV 01 &mdash; 2026</div>
+    <div class="hud tr" aria-hidden="true">X <b id="hx">+0.00</b><br>Y <b id="hy">+0.00</b></div>
+    <div class="hud bl" aria-hidden="true">SCROLL <b id="hs">000</b>%</div>
+    <div class="hud br" aria-hidden="true">&theta; <b id="ht">000.0</b>&deg;</div>
+    <div class="hero-inner">
+      <h1><span class="ln"><span>Open</span></span><span class="ln"><span><span class="grad">Dimension</span><span class="dot">.</span></span></span></h1>
+      <p class="tagline glass">Something new is on its way.</p>
+    </div>
+    <a class="scroll-hint" href="#vision" aria-label="Scroll to Vision"><span></span></a>
+  </section>
+
+  <!-- 2. Vision: a schematic draws itself while the words light up -->
+  <section class="scene vision" id="vision" data-scene="vision" data-theme="light">
+    <div class="stage">
+      <div class="grid" aria-hidden="true"></div>
+      <div class="schematic" id="schematic" data-depth="-0.4" aria-hidden="true">
+        <span class="lab fade" style="left:72.7%;top:37.7%">r = 1.000</span>
+        <span class="lab fade" style="left:43%;top:89.7%">&#216; 2.000</span>
+        <span class="lab fade" style="left:52%;top:7.3%">+Y</span>
+        <span class="lab fade" style="left:91.3%;top:48.7%">+X</span>
+      </div>
+      <div class="glass lens" data-depth="0.28" aria-hidden="true"></div>
+      <div class="vision-copy" data-depth="0.1">
+        <p class="eyebrow">01 &mdash; Vision</p>
+        <p class="statement" data-reveal>We&rsquo;re a small team building something we think is worth building. We&rsquo;ll tell you what it is when it&rsquo;s ready. Until then, consider this a door left slightly open.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Products: pinned; wireframe objects slide sideways behind glass cards -->
+  <section class="scene products" id="products" data-scene="products" data-theme="dark">
+    <div class="stage">
+      <div class="grid" aria-hidden="true"></div>
+      <div class="products-head" data-depth="0.1">
+        <p class="eyebrow">02 &mdash; Products</p>
+        <h2>Coming into focus.</h2>
+      </div>
+      <div class="track" id="track">
+        <div class="slot"><div class="art" data-shape="cube" data-color="100,210,255" data-depth="-0.3" aria-hidden="true"></div><article class="glass card" data-depth="0.14"><span class="num">01</span><h3>Think<br>bigger.</h3><p class="sub">Introducing something new.</p><p class="more">Details soon</p></article></div>
+        <div class="slot"><div class="art" data-shape="sphere" data-color="255,159,10" data-depth="-0.3" aria-hidden="true"></div><article class="glass card" data-depth="0.14"><span class="num">02</span><h3>Made to<br>be opened.</h3><p class="sub">A different way in.</p><p class="more">Details soon</p></article></div>
+        <div class="slot"><div class="art" data-shape="torus" data-color="48,209,88" data-depth="-0.3" aria-hidden="true"></div><article class="glass card" data-depth="0.14"><span class="num">03</span><h3>Another<br>point of view.</h3><p class="sub">Coming into focus.</p><p class="more">Details soon</p></article></div>
+        <div class="slot"><div class="art" data-shape="wave" data-color="191,90,242" data-depth="-0.3" aria-hidden="true"></div><article class="glass card" data-depth="0.14"><span class="num">04</span><h3>One more<br>thing.</h3><p class="sub">Not yet.</p><p class="more">Details soon</p></article></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Studio -->
+  <section class="scene studio" id="studio" data-scene="studio" data-theme="light">
+    <div class="grid" aria-hidden="true"></div>
+    <div class="rings" id="rings" data-depth="-0.35" aria-hidden="true"></div>
+    <div class="studio-inner">
+      <p class="eyebrow">03 &mdash; Studio</p>
+      <h2 data-fade data-depth="0.08">Small team.<br>Big dimension.</h2>
+      <div class="chips" data-fade>
+        <div class="glass chip" data-depth="0.22">Design</div>
+        <div class="glass chip" data-depth="0.3">Engineering</div>
+        <div class="glass chip" data-depth="0.38">Curiosity</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Contact / footer -->
+  <footer class="scene contact" id="contact" data-scene="contact" data-theme="dark">
+    <div class="grid" aria-hidden="true"></div>
+    <div class="contact-art" id="contactArt" data-depth="-0.25" aria-hidden="true"></div>
+    <div class="contact-inner" data-fade>
+      <h2>Say hello<span class="dot">.</span></h2>
+      <p>Contact details coming soon.</p>
+    </div>
+    <p class="legal">Copyright &copy; <span id="year">2026</span> Open Dimension. All rights reserved. &middot; open-dimension.com</p>
+  </footer>
+
+</main>
+
+<script src="assets/vendor/lenis.min.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
