@@ -208,7 +208,7 @@ h1 { font: 400 clamp(76px, 17vw, 210px)/.84 var(--serif); letter-spacing: -.04em
 .no-motion .row { opacity: 1; }
 
 /* ---------- 4. Studio ---------- */
-.studio { height: 210vh; text-align: center; }
+.studio { height: calc(var(--vh) * 3.4); text-align: center; }
 .studio .stage { display: grid; place-items: center; padding: 0 20px; }
 .studio-inner { position: relative; z-index: 1; }
 .studio h2 { font: 400 clamp(52px, 10vw, 140px)/.9 var(--serif); letter-spacing: -.035em; }
@@ -299,3 +299,7 @@ html.menu-open, html.menu-open body { overflow: hidden; }
 .menu-links .peek { position: absolute; right: 0; top: 50%; max-width: 30ch; text-align: right; font: 400 clamp(20px, 2.4vw, 32px)/1.15 var(--serif); letter-spacing: -.01em; color: var(--muted-dark); opacity: 0; transform: translate3d(14px, -50%, 0); transition: opacity var(--t-base) var(--ease), transform var(--t-slow) var(--ease); pointer-events: none; }
 .menu-links a:hover .peek, .menu-links a:focus-visible .peek { opacity: 1; transform: translate3d(0, -50%, 0); }
 @media (max-width: 900px) { .menu-links .peek { display: none; } }
+
+/* Studio chips step in with scroll while the scene is pinned */
+.motion .chip { opacity: 0; transform: translateY(18px) scale(.96); transition: opacity var(--t-slow) var(--ease), transform var(--t-slow) var(--ease); }
+.motion .chip.on { opacity: 1; transform: none; }

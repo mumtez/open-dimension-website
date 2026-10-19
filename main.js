@@ -28,7 +28,7 @@
   var menu = $('#menu'), menuBtn = $('#menuBtn'), menuLabel = $('.menu-label', menuBtn);
   var menuLinks = $$('[data-link]', menu);
   var inertWhileMenu = [mainEl, $('.wordmark'), $('.bar-right a.pill')];
-  var plist = $('#plist'), hl = $('#hl'), rows = $$('.row', plist), pcount = $('#pcount');
+  var chipEls = $$('.chip'), plist = $('#plist'), hl = $('#hl'), rows = $$('.row', plist), pcount = $('#pcount');
   var whereEl = $('#where'), whereN = $('#whereN'), whereT = $('#whereT'), whereB = $('#whereB');
 
   var scenes = $$('[data-scene]').map(function (el) { return { el: el, kind: el.dataset.scene, theme: el.dataset.theme, top: 0, h: 0, p: 0 }; });
@@ -177,6 +177,9 @@
         sty(l.el, 'translate', '0 ' + (-d * l.s).toFixed(1) + 'px');
       }
     }
+
+    // Studio: while pinned, the chips light up one by one with scroll (all on without motion).
+    for (i = 0; i < chipEls.length; i++) { var onC = !motion || studS.p > 0.2 + i * 0.22; if (onC !== chipEls[i]._on) { chipEls[i]._on = onC; chipEls[i].classList.toggle('on', onC); } }
 
     // Products: while pinned, scroll steps through the rows (equal steps; the last row holds); real-mouse hover overrides.
     if (hoverRow && Math.abs(y - lastY) > 1.5) hoverRow = null;
@@ -436,8 +439,8 @@
   function drawRings(t) {
     var r = ringsEl.getBoundingClientRect(), k = r.width / 800, cx = r.left + r.width / 2, cy = r.top + r.height / 2, tm = motion ? t : 0;
     emitDashRing(cx, cy, 380 * k, 2 * k, 10 * k, 0, INK, 0.28, 1.2);
-    emitDashRing(cx, cy, 320 * k, 1 * k, 7 * k, tm * 0.00007 + studS.p * 1.4, INK, 0.3, 1.2);
-    emitDashRing(cx, cy, 250 * k, 40 * k, 14 * k, -tm * 0.00004 - studS.p * 0.9, INK, 0.28, 1.2);
+    emitDashRing(cx, cy, 320 * k, 1 * k, 7 * k, tm * 0.00007 + studS.p * 2.4, INK, 0.3, 1.2);
+    emitDashRing(cx, cy, 250 * k, 40 * k, 14 * k, -tm * 0.00004 - studS.p * 1.6, INK, 0.28, 1.2);
     emitCircle(cx, cy, 170 * k, 0, TAU, 90, INK, 0.26, 1.2);
   }
 
@@ -526,6 +529,7 @@
       if (pn.kind === 'pill') target = menuOpen ? 0 : ease(clamp((sinceIntro - 500) / 1000));
       else if (pn.kind === 'tag') target = ease(clamp((sinceIntro - 1200) / 1000)) * clamp(state.heroAlpha);
       else if (pn.kind === 'hl') target = hlOn;
+      else if (pn.kind === 'chip') target = pn.el._on ? 1 : 0;
       else if (pn.fade) target = pn.fade.classList.contains('in') ? 1 : 0;
       if (!motion) target = pn.kind === 'hl' ? hlOn : 1;
       if (pn.kind === 'hl') target *= clamp((r.top - 40) / 90);     // never glide over the top bar
