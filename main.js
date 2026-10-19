@@ -8,24 +8,26 @@
   var clamp = function (v, a, b) { return Math.min(b === undefined ? 1 : b, Math.max(a === undefined ? 0 : a, v)); };
   var lerp = function (a, b, t) { return a + (b - a) * t; };
   var ease = function (t) { return 1 - Math.pow(1 - t, 4); };
+  var damp = function (dt, rate) { return 1 - Math.exp(-dt * rate); };
   var $ = function (s, c) { return (c || document).querySelector(s); };
   var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
 
   document.getElementById('year').textContent = new Date().getFullYear();
 
   /* ================= DOM references ================= */
-  var nav = $('#nav'), linksEl = $('#links');
-  var links = $$('[data-link]', linksEl);
+  var bar = $('#nav');
   var heroInner = $('.hero-inner');
-  var tessEl = $('#tess'), track = $('#track'), schematic = $('#schematic'), ringsEl = $('#rings'), contactArt = $('#contactArt');
+  var tessEl = $('#tess'), schematic = $('#schematic'), ringsEl = $('#rings'), contactArt = $('#contactArt'), lensEl = $('.lens');
   var labs = $$('.lab', schematic);
-  var arts = $$('.art');
-  var cards = $$('.card');
-  var slots = $$('.slot');
-  var hud = { x: $('#hx'), y: $('#hy'), s: $('#hs'), t: $('#ht') };
+  var menu = $('#menu'), menuBtn = $('#menuBtn'), menuLabel = $('.menu-label', menuBtn);
+  var menuLinks = $$('[data-link]', menu);
+  var plist = $('#plist'), hl = $('#hl'), rows = $$('.row', plist);
+  var whereEl = $('#where'), whereN = $('#whereN'), whereT = $('#whereT'), whereB = $('#whereB');
+  var hud = { x: $('#hx'), y: $('#hy'), t: $('#ht') };
 
   var scenes = $$('[data-scene]').map(function (el) { return { el: el, kind: el.dataset.scene, theme: el.dataset.theme, top: 0, h: 0, p: 0 }; });
   var sceneBy = {}; scenes.forEach(function (s) { sceneBy[s.kind] = s; });
+  var LABEL = { hero: ['00', 'Home'], vision: ['01', 'Vision'], products: ['02', 'Products'], studio: ['03', 'Studio'], contact: ['04', 'Contact'] };
 
   // Depth layers: positive depth moves faster than the scroll (front), negative slower (back).
   var layers = $$('[data-depth]').map(function (el) {
@@ -40,13 +42,21 @@
     words = words.concat($$('.word', el));
   });
 
-  // Fade-ins for elements that aren't scroll-pinned.
+  // Headings rise out of line masks.
+  $$('[data-mask]').forEach(function (el) {
+    el.innerHTML = el.innerHTML.split(/<br\s*\/?>/i).map(function (line, i) {
+      return '<span class="mk"><span style="transition-delay:' + (i * 0.1).toFixed(2) + 's">' + line + '</span></span>';
+    }).join('');
+  });
+
+  // Reveal on scroll.
+  var revealTargets = $$('[data-mask], [data-fade], .row');
   if (motion && 'IntersectionObserver' in window) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-    }, { threshold: 0.25 });
-    $$('[data-fade]').forEach(function (el) { io.observe(el); });
-  } else { $$('[data-fade]').forEach(function (el) { el.classList.add('in'); }); }
+    }, { threshold: 0.2 });
+    revealTargets.forEach(function (el, i) { if (el.classList.contains('row')) el.style.transitionDelay = ''; io.observe(el); });
+  } else { revealTargets.forEach(function (el) { el.classList.add('in'); }); }
 
   var pointer = { x: 0, y: 0, sx: 0, sy: 0 };
   window.addEventListener('pointermove', function (e) {
@@ -54,15 +64,62 @@
     pointer.y = (e.clientY / window.innerHeight) * 2 - 1;
   }, { passive: true });
 
+  /* ================= Menu ================= */
+  var lenis = null, menuOpen = false;
+  function setMenu(open) {
+    if (open === menuOpen) return;
+    menuOpen = open;
+    var r = menuBtn.getBoundingClientRect();
+    menu.style.setProperty('--ox', (r.left + r.width / 2) + 'px'); menu.style.setProperty('--oy', (r.top + r.height / 2) + 'px');
+    menu.classList.toggle('open', open); root.classList.toggle('menu-open', open);
+    menuBtn.setAttribute('aria-expanded', String(open)); menu.setAttribute('aria-hidden', String(!open));
+    if (open) { menu.removeAttribute('inert'); if (lenis) lenis.stop(); } else { menu.setAttribute('inert', ''); if (lenis) lenis.start(); }
+    menuLabel.textContent = open ? 'Close' : 'Menu';
+  }
+  menuBtn.addEventListener('click', function () { setMenu(!menuOpen); });
+  window.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+
+  /* ================= Section indicator ================= */
+  var whereKind = null, whereTimer = 0;
+  function setWhere(kind) {
+    if (kind === whereKind || !LABEL[kind]) return;
+    var first = whereKind === null; whereKind = kind;
+    whereN.textContent = LABEL[kind][0];
+    if (first || !motion) { whereT.textContent = LABEL[kind][1]; return; }
+    clearTimeout(whereTimer);
+    whereT.className = 'out';
+    whereTimer = setTimeout(function () {
+      whereT.textContent = LABEL[kind][1]; whereT.className = 'pre';
+      void whereT.offsetWidth; whereT.className = '';
+    }, 260);
+  }
+
+  /* ================= Loader / intro ================= */
+  var loader = $('#loader'), loaderN = $('#loaderN'), introAt = 0;
+  function startIntro() {
+    if (introAt) return;
+    introAt = performance.now();
+    root.classList.add('ready');
+    if (loader) { loader.classList.add('done'); setTimeout(function () { loader.classList.add('gone'); }, 1500); }
+  }
+  if (motion && loader) {
+    var ls = performance.now(), minMs = 1400, fontsReady = false;
+    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function () { fontsReady = true; });
+    (function count() {
+      var k = clamp((performance.now() - ls) / minMs);
+      loaderN.textContent = ('00' + Math.round(ease(k) * 100)).slice(-3);
+      if (k < 1 || !fontsReady) { if (performance.now() - ls < 6000) return requestAnimationFrame(count); }
+      loaderN.textContent = '100'; setTimeout(startIntro, 180);
+    })();
+  } else { introAt = performance.now(); root.classList.add('ready'); }
+
   /* ================= Layout metrics (no per-frame layout reads) ================= */
   var vw = window.innerWidth, vh = window.innerHeight;
-  var trackDistance = 0, slotX0 = [];
   function measure() {
     vw = window.innerWidth; vh = window.innerHeight;
     var sy = window.scrollY;
     scenes.forEach(function (s) { var r = s.el.getBoundingClientRect(); s.top = r.top + sy; s.h = r.height; });
-    trackDistance = Math.max(0, track.scrollWidth - vw);
-    slotX0 = slots.map(function (s) { return s.offsetLeft + s.offsetWidth / 2; });
+    if (rows.length) plist.style.setProperty('--rowh', rows[0].offsetHeight + 'px');
     panes.forEach(function (p) {
       var cs = getComputedStyle(p.el).borderRadius;
       p.radiusPct = /%/.test(cs); p.radius = parseFloat(cs) || 0;
@@ -70,125 +127,85 @@
     if (glOK) resizeGL();
   }
 
+  /* ================= Products: glass bar slides to the hovered row ================= */
+  var hlTarget = null, hlY = 0, hlOn = 0;
+  rows.forEach(function (row) { row.addEventListener('mouseenter', function () { hlTarget = row; }); });
+  plist.addEventListener('mouseleave', function () { hlTarget = null; });
+
   /* ================= Per-frame DOM update (writes only) ================= */
-  var state = { sp: 0, heroP: 0, heroAlpha: 1, tessScale: 1, tessAlpha: 1, schematicP: 0, cardScale: [1, 1, 1, 1], navLight: 0, activeScene: null, theme: 'dark', tessAngle: 0 };
-  var activeLink = null;
+  var state = { sp: 0, heroAlpha: 1, tessScale: 1, tessAlpha: 1, schematicP: 0, navLight: 0, theme: 'dark', tessAngle: 0 };
 
-  function moveNav() {
-    if (!activeLink) { linksEl.style.setProperty('--po', 0); return; }
-    linksEl.style.setProperty('--px', activeLink.parentNode.offsetLeft + 'px');
-    linksEl.style.setProperty('--pw', activeLink.parentNode.offsetWidth + 'px');
-    linksEl.style.setProperty('--po', 1);
-  }
-
-  function update(y) {
+  function update(y, dt) {
     state.sp = y / 1000;
     scenes.forEach(function (s) { s.p = clamp((y - s.top) / Math.max(1, s.h - vh)); });
 
-    hud.s.textContent = ('00' + Math.round(clamp(y / Math.max(1, document.documentElement.scrollHeight - vh)) * 100)).slice(-3);
+    whereB.style.transform = 'scaleX(' + clamp(y / Math.max(1, document.documentElement.scrollHeight - vh)).toFixed(4) + ')';
 
     if (motion) {
       var hp = clamp(y / vh);
-      state.heroP = hp;
       state.heroAlpha = 1 - hp * 1.3;
-      heroInner.style.transform = 'translate3d(0,' + (-hp * 8).toFixed(3) + 'vh,0) scale(' + (1 - hp * 0.16).toFixed(4) + ')';
+      heroInner.style.transform = 'translate3d(' + (pointer.sx * 12).toFixed(2) + 'px,' + (-hp * 8 * vh / 100 + pointer.sy * 7).toFixed(2) + 'px,0) scale(' + (1 - hp * 0.16).toFixed(4) + ')';
       heroInner.style.opacity = clamp(state.heroAlpha).toFixed(3);
       state.tessScale = 1 + hp * 0.25;
       state.tessAlpha = 1 - hp * 0.85;
 
-      var vis = sceneBy.vision, prod = sceneBy.products;
-      // Vision: words + schematic progress
+      var vis = sceneBy.vision, i;
       if (y > vis.top - vh && y < vis.top + vis.h) {
         var n = words.length, wp = clamp((vis.p - 0.06) / 0.72) * n;
-        for (var i = 0; i < n; i++) words[i].style.opacity = (0.14 + 0.86 * clamp(wp - i)).toFixed(3);
+        for (i = 0; i < n; i++) words[i].style.opacity = (0.14 + 0.86 * clamp(wp - i)).toFixed(3);
         state.schematicP = clamp((vis.p - 0.02) / 0.7);
         var lo = clamp((state.schematicP - 0.55) * 3).toFixed(2);
         for (i = 0; i < labs.length; i++) labs[i].style.opacity = lo;
-        var lens = $('.lens');
-        lens.style.transform = 'scale(' + (0.85 + vis.p * 0.5).toFixed(4) + ')';
+        lensEl.style.transform = 'scale(' + (0.85 + vis.p * 0.5).toFixed(4) + ')';
       }
-      // Products: slide the track, scale cards by distance from centre
-      if (y > prod.top - vh && y < prod.top + prod.h) {
-        var tx = -prod.p * trackDistance;
-        track.style.transform = 'translate3d(' + tx.toFixed(2) + 'px,0,0)';
-        for (i = 0; i < cards.length; i++) {
-          var dist = Math.abs((slotX0[i] + tx - vw / 2) / vw);
-          var sc = 1 - 0.09 * clamp(dist * 1.5);
-          state.cardScale[i] = sc;
-          cards[i].style.transform = 'scale(' + sc.toFixed(4) + ')';
-        }
-      }
-      // Depth layers
       for (i = 0; i < layers.length; i++) {
         var l = layers[i], sc2 = l.scene, rt = sc2.top - y, d;
-        if (sc2.kind === 'vision' || sc2.kind === 'products') d = (sc2.p - 0.5) * vh;
+        if (sc2.kind === 'vision') d = (sc2.p - 0.5) * vh;
         else if (sc2.kind === 'hero') d = clamp(y / vh) * vh * 0.6;
         else d = vh / 2 - (rt + sc2.h / 2);
         l.el.style.translate = '0 ' + (-d * l.s).toFixed(2) + 'px';
       }
     }
 
-    // Which scene is under the nav / centred in view
-    var theme = 'dark', current = null;
-    for (i = 0; i < scenes.length; i++) {
-      var s = scenes[i], top = s.top - y, bot = top + s.h;
+    // hover bar: slide to the row, fade in/out
+    var want = hlTarget ? 1 : 0;
+    if (hlTarget) { var ty = hlTarget.offsetTop; if (hlOn < 0.05) hlY = ty; else hlY += (ty - hlY) * damp(dt, 13); }
+    hlOn += (want - hlOn) * damp(dt, 9);
+    hl.style.transform = 'translate3d(0,' + hlY.toFixed(2) + 'px,0)';
+
+    // which scene is under the bar / centred in view
+    var theme = 'dark', current = 'hero';
+    for (var j = 0; j < scenes.length; j++) {
+      var s = scenes[j], top = s.top - y, bot = top + s.h;
       if (top <= 40 && bot > 40) theme = s.theme;
       if (top <= vh * 0.45 && bot > vh * 0.45) current = s.kind;
     }
     state.theme = theme;
-    if (nav.dataset.theme !== theme) nav.dataset.theme = theme;
-    var next = null;
-    links.forEach(function (a) { var on = a.dataset.link === current; a.classList.toggle('is-active', on); if (on) next = a; });
-    if (next !== activeLink) { activeLink = next; moveNav(); }
+    if (bar.dataset.theme !== theme) { bar.dataset.theme = theme; whereEl.dataset.theme = theme; }
+    setWhere(current);
+    menuLinks.forEach(function (a) { a.classList.toggle('is-active', a.dataset.link === current); });
   }
 
   /* ================= Wireframe geometry ================= */
   function ring(n, f) { var p = []; for (var i = 0; i <= n; i++) p.push(f(i / n * TAU)); return p; }
-  var SH = {
-    cube: function () {
-      var L = [], v, i, j, k, s;
-      for (k = 0; k < 2; k++) {
-        s = k ? 0.48 : 0.82; v = [];
-        for (i = 0; i < 8; i++) v.push([(i & 1 ? 1 : -1) * s, (i & 2 ? 1 : -1) * s, (i & 4 ? 1 : -1) * s]);
-        for (i = 0; i < 8; i++) for (j = i + 1; j < 8; j++) { var d = i ^ j; if (d === 1 || d === 2 || d === 4) L.push([v[i], v[j]]); }
+  var waveLines = (function () {
+    var L = [], N = 19, i, j, row, col;
+    for (i = 0; i < N; i++) {
+      row = []; col = [];
+      for (j = 0; j < N; j++) {
+        var x = i / (N - 1) * 2 - 1, y = j / (N - 1) * 2 - 1;
+        row.push([x * 0.95, 0, y * 0.95]); col.push([y * 0.95, 0, x * 0.95]);
       }
-      return L;
-    },
-    sphere: function () {
-      var L = [], k, m;
-      for (k = -4; k <= 4; k++) (function (y) { var r = Math.sqrt(1 - y * y) * 0.9; L.push(ring(56, function (a) { return [Math.cos(a) * r, y * 0.9, Math.sin(a) * r]; })); })(k / 5);
-      for (m = 0; m < 12; m++) (function (b) { L.push(ring(56, function (a) { return [Math.cos(a) * Math.cos(b) * 0.9, Math.sin(a) * 0.9, Math.cos(a) * Math.sin(b) * 0.9]; })); })(m / 12 * Math.PI);
-      return L;
-    },
-    torus: function () {
-      var L = [], R = 0.62, r = 0.27, u, v;
-      for (u = 0; u < 28; u++) (function (a) { L.push(ring(24, function (t) { return [(R + r * Math.cos(t)) * Math.cos(a), r * Math.sin(t), (R + r * Math.cos(t)) * Math.sin(a)]; })); })(u / 28 * TAU);
-      for (v = 0; v < 10; v++) (function (t) { L.push(ring(72, function (a) { return [(R + r * Math.cos(t)) * Math.cos(a), r * Math.sin(t), (R + r * Math.cos(t)) * Math.sin(a)]; })); })(v / 10 * TAU);
-      return L;
-    },
-    wave: function () {          // base grid; y is rewritten each frame by waveStep()
-      var L = [], N = 19, i, j, row, col;
-      for (i = 0; i < N; i++) {
-        row = []; col = [];
-        for (j = 0; j < N; j++) {
-          var x = i / (N - 1) * 2 - 1, y = j / (N - 1) * 2 - 1;
-          row.push([x * 0.95, 0, y * 0.95]); col.push([y * 0.95, 0, x * 0.95]);
-        }
-        L.push(row, col);
-      }
-      return L;
+      L.push(row, col);
     }
-  };
-  var shapeCache = {};
-  function shape(name) { return shapeCache[name] || (shapeCache[name] = SH[name]()); }
+    return L;
+  })();
   function waveStep(lines, t) {
     for (var i = 0; i < lines.length; i++) for (var j = 0; j < lines[i].length; j++) {
       var p = lines[i][j], d = Math.sqrt(p[0] * p[0] + p[2] * p[2]);
       p[1] = Math.sin(d * 6 - t * 0.0016) * 0.2 * (1 - d * 0.4);
     }
   }
-
-  // Tesseract
   var T4 = { v: [], e: [] };
   (function () {
     var i, j;
@@ -200,13 +217,12 @@
   /* ================= WebGL2 renderer ================= */
   var glc = $('#gl'), gl = null, glOK = false;
   var P = {}, vaoQuad, vaoLines, lineBuf, fbo, bgTex;
-  var MAXSEG = 14000, SEGF = 10;
+  var MAXSEG = 8000, SEGF = 10;
   var seg = new Float32Array(MAXSEG * SEGF), nseg = 0;
   var ranges = [];
-  var S = 1, W = 1, H = 1;           // render scale, device px size
+  var S = 1, W = 1, H = 1, quality = 1;     // quality: adaptive render-scale multiplier
   var panes = [];
 
-  // WebGL2 has no base-instance, so each range re-points the instanced attributes at its own byte offset.
   var ATTRS = [[0, 2, 0], [1, 2, 8], [2, 4, 16], [3, 2, 32]];
   function setLineBase(first) {
     for (var i = 0; i < ATTRS.length; i++) gl.vertexAttribPointer(ATTRS[i][0], ATTRS[i][1], gl.FLOAT, false, SEGF * 4, first * SEGF * 4 + ATTRS[i][2]);
@@ -234,9 +250,10 @@
     'void main(){ float v=abs(vS); float core=1.-smoothstep(vW.x*.5-.55,vW.x*.5+.55,v); float glow=vW.y*exp(-v*v/9.);\n' +
     ' if(uMode<.5){ o=vec4(vC.rgb*(core+glow)*vC.a,0.); } else { float a=core*vC.a; o=vec4(vC.rgb*a,a); } }';
 
-  var FS_BLIT = '#version 300 es\nprecision highp float; out vec4 o; uniform sampler2D uBg; uniform vec2 uResDev;\n' +
+  var FS_BLIT = '#version 300 es\nprecision highp float; out vec4 o; uniform sampler2D uBg;\n' +
     'void main(){ o=texelFetch(uBg, ivec2(gl_FragCoord.xy), 0); }';
 
+  // Glass: refraction through a bevelled slab with rim light, sheen and a soft drop shadow.
   var FS_GLASS = '#version 300 es\nprecision highp float; in vec2 vP; out vec4 o;\n' +
     'uniform sampler2D uBg; uniform vec2 uResDev; uniform float uS; uniform vec2 uC; uniform vec2 uH;\n' +
     'uniform float uR, uB, uT, uFrost, uA, uLight, uSh; uniform vec4 uTint;\n' +
@@ -302,7 +319,7 @@
 
   function resizeGL() {
     var dpr = window.devicePixelRatio || 1;
-    S = Math.min(dpr, 2);
+    S = Math.min(dpr, 2) * quality;
     var maxPx = 2.8e6; if (vw * vh * S * S > maxPx) S = Math.sqrt(maxPx / (vw * vh));
     W = Math.max(1, Math.round(vw * S)); H = Math.max(1, Math.round(vh * S));
     glc.width = W; glc.height = H;
@@ -355,21 +372,15 @@
   }
 
   var rectOf = function (el) { return el.getBoundingClientRect(); };
-  var COLS = {};
-  function colOf(str) { return COLS[str] || (COLS[str] = str.split(',').map(function (v) { return parseFloat(v) / 255; })); }
 
-  var t0 = 0, introDone = false;
-  function render(t, y) {
-    if (!t0) t0 = t;
-    var intro = motion ? ease(clamp((t - t0) / 2400)) : 1;
-    var navLightTarget = state.theme === 'light' ? 1 : 0;
-    state.navLight = lerp(state.navLight, navLightTarget, 0.12);
-
-    // ---- geometry pass: build segments per scene ----
-    nseg = 0; ranges.length = 0;
+  function render(t, y, dt) {
+    var intro = motion ? (introAt ? ease(clamp((performance.now() - introAt) / 2400)) : 0) : 1;
+    var sinceIntro = introAt ? performance.now() - introAt : -1;
+    state.navLight = lerp(state.navLight, state.theme === 'light' ? 1 : 0, damp(dt, 7));
     var ink = [0.12, 0.12, 0.14], blue = [0.04, 0.52, 1];
     var sceneRects = scenes.map(function (s) { var top = s.top - y; return { top: top, bot: top + s.h, s: s }; });
 
+    nseg = 0; ranges.length = 0;
     function range(kind, mode, build) {
       var sc = sceneBy[kind], top = sc.top - y, bot = top + sc.h;
       if (bot < -50 || top > vh + 50) return;
@@ -400,8 +411,8 @@
       });
     });
 
-    // vision schematic (ink on light)
-    range('vision', 1, function (sc) {
+    // vision schematic (ink on light): draws itself as you scroll
+    range('vision', 1, function () {
       var r = rectOf(schematic), k = r.width / 600, cx = r.left + 300 * k, cy = r.top + 300 * k, dp = state.schematicP;
       var items = [
         function (f) { emitCircle(cx, cy, 250 * k, -1.2, -1.2 + TAU * f, Math.max(2, Math.round(110 * f)), ink, 0.85, 1.3); },
@@ -413,23 +424,9 @@
         function (f) { push(cx - 177 * k, cy - 177 * k, cx - 177 * k + 354 * k * f, cy - 177 * k + 354 * k * f, ink[0], ink[1], ink[2], 0.4, 1.1, 0); },
         function (f) { push(cx + 177 * k, cy - 177 * k, cx + 177 * k - 354 * k * f, cy - 177 * k + 354 * k * f, ink[0], ink[1], ink[2], 0.4, 1.1, 0); },
         function (f) { push(cx, cy, cx + 130 * k * f, cy - 75 * k * f, blue[0], blue[1], blue[2], 1, 2.2, 0); },
-        function (f) { var yy = cy + 248 * k; push(cx - 250 * k, yy, cx - 250 * k + 500 * k * f, yy, ink[0], ink[1], ink[2], 0.65, 1.2, 0); if (f > 0.02) { push(cx - 250 * k, yy - 8 * k, cx - 250 * k, yy + 8 * k, ink[0], ink[1], ink[2], 0.65, 1.2, 0); } if (f > 0.98) push(cx + 250 * k, yy - 8 * k, cx + 250 * k, yy + 8 * k, ink[0], ink[1], ink[2], 0.65, 1.2, 0); }
+        function (f) { var yy = cy + 248 * k; push(cx - 250 * k, yy, cx - 250 * k + 500 * k * f, yy, ink[0], ink[1], ink[2], 0.65, 1.2, 0); if (f > 0.02) push(cx - 250 * k, yy - 8 * k, cx - 250 * k, yy + 8 * k, ink[0], ink[1], ink[2], 0.65, 1.2, 0); if (f > 0.98) push(cx + 250 * k, yy - 8 * k, cx + 250 * k, yy + 8 * k, ink[0], ink[1], ink[2], 0.65, 1.2, 0); }
       ];
       items.forEach(function (fn, idx) { var f = clamp(dp * 1.6 - idx * 0.07); if (!motion) f = 1; if (f > 0.001) fn(f); });
-    });
-
-    // product wireframes (additive on dark)
-    range('products', 0, function (sc) {
-      for (var i = 0; i < arts.length; i++) {
-        var r = rectOf(arts[i]);
-        if (r.right < -200 || r.left > vw + 200) continue;
-        var name = arts[i].dataset.shape, lines = shape(name), tm = motion ? t : 0;
-        if (name === 'wave') waveStep(lines, tm);
-        var R = Math.min(r.width, r.height) * 0.3 * 1.55 * state.cardScale[i];
-        var rx = name === 'wave' ? -1.0 : 0.45 + Math.sin(tm * 0.0003) * 0.25;
-        var ry = (name === 'wave' ? Math.sin(tm * 0.0002) * 0.3 : tm * 0.00028) + state.sp * 3.2;
-        emitShape(lines, r.left + r.width / 2, r.top + r.height / 2, R, rx, ry, colOf(arts[i].dataset.color), 1, 0.4, 1.2);
-      }
     });
 
     // studio rings (ink on light)
@@ -443,12 +440,12 @@
 
     // contact wave (additive on dark)
     range('contact', 0, function () {
-      var r = rectOf(contactArt), name = 'wave', lines = shape(name), tm = motion ? t : 0;
-      waveStep(lines, tm);
-      emitShape(lines, r.left + r.width / 2, r.top + r.height * 0.55, Math.min(r.width * 0.42, r.height * 0.9), -1.12, Math.sin(tm * 0.00015) * 0.25, [0.39, 0.82, 1], 0.7, 0.4, 1.2);
+      var r = rectOf(contactArt), tm = motion ? t : 0;
+      waveStep(waveLines, tm);
+      emitShape(waveLines, r.left + r.width / 2, r.top + r.height * 0.55, Math.min(r.width * 0.42, r.height * 0.9), -1.12, Math.sin(tm * 0.00015) * 0.25, [0.39, 0.82, 1], 0.7, 0.4, 1.2);
     });
 
-    // ---- pass A: scene backgrounds + lines → bg texture ----
+    /* ---- pass A: scene backgrounds + lines → bg texture ---- */
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.viewport(0, 0, W, H);
     gl.disable(gl.SCISSOR_TEST); gl.disable(gl.BLEND);
@@ -457,7 +454,7 @@
     gl.uniform2f(U(P.bg, 'uRes'), vw, vh);
     sceneRects.forEach(function (sr) {
       if (sr.bot < 0 || sr.top > vh) return;
-      var s = sr.s, light = s.theme === 'light', pinned = s.kind === 'vision' || s.kind === 'products', hero = s.kind === 'hero';
+      var s = sr.s, light = s.theme === 'light', pinned = s.kind === 'vision', hero = s.kind === 'hero';
       var d, depth;
       if (pinned) d = (s.p - 0.5) * vh; else if (hero) d = clamp(y / vh) * vh * 0.6; else d = vh / 2 - (sr.top + s.h / 2);
       depth = hero ? 0.18 : 0.2;
@@ -493,7 +490,7 @@
 
     gl.bindTexture(gl.TEXTURE_2D, bgTex); gl.generateMipmap(gl.TEXTURE_2D);
 
-    // ---- pass B: blit, then glass panes ----
+    /* ---- pass B: blit, then glass panes ---- */
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, W, H);
     gl.disable(gl.BLEND);
@@ -509,16 +506,17 @@
     panes.forEach(function (pn) {
       var r = rectOf(pn.el);
       if (r.width < 2 || r.bottom < -80 || r.top > vh + 80 || r.right < -80 || r.left > vw + 80) return;
-      // alpha: fade with the thing that owns the pane
       var target = 1;
-      if (pn.kind === 'nav') target = ease(clamp((t - t0 - 500) / 1000));
-      else if (pn.kind === 'tag') target = ease(clamp((t - t0 - 950) / 1000)) * clamp(state.heroAlpha);
+      if (pn.kind === 'pill') target = menuOpen ? 0 : ease(clamp((sinceIntro - 500) / 1000));
+      else if (pn.kind === 'tag') target = ease(clamp((sinceIntro - 950) / 1000)) * clamp(state.heroAlpha);
+      else if (pn.kind === 'hl') target = hlOn;
       else if (pn.fade) target = pn.fade.classList.contains('in') ? 1 : 0;
-      if (!motion) target = 1;
-      pn.alpha = lerp(pn.alpha, target, 0.14);
+      if (!motion) target = pn.kind === 'hl' ? hlOn : 1;
+      pn.alpha = lerp(pn.alpha, target, damp(dt, 8));
       if (pn.alpha < 0.01) return;
-      var host = pn.kind === 'nav' ? null : pn.el.closest('[data-scene]');
-      var light = pn.kind === 'nav' ? state.navLight : (host && host.dataset.theme === 'light' ? 1 : 0);
+
+      var host = (pn.kind === 'pill') ? null : pn.el.closest('[data-scene]');
+      var light = pn.kind === 'pill' ? state.navLight : (host && host.dataset.theme === 'light' ? 1 : 0);
       var sc = r.width / (pn.el.offsetWidth || r.width);
       var rad = pn.radiusPct ? Math.min(r.width, r.height) * pn.radius / 100 : Math.min(pn.radius * sc, Math.min(r.width, r.height) / 2);
       var M = 110;
@@ -527,7 +525,8 @@
       gl.uniform2f(U(P.glass, 'uH'), r.width / 2, r.height / 2);
       gl.uniform1f(U(P.glass, 'uR'), rad);
       gl.uniform1f(U(P.glass, 'uB'), pn.bevel * sc); gl.uniform1f(U(P.glass, 'uT'), pn.thick * sc);
-      gl.uniform1f(U(P.glass, 'uSh'), pn.shadow); gl.uniform1f(U(P.glass, 'uFrost'), pn.frost); gl.uniform1f(U(P.glass, 'uA'), pn.alpha); gl.uniform1f(U(P.glass, 'uLight'), light);
+      gl.uniform1f(U(P.glass, 'uSh'), pn.shadow); gl.uniform1f(U(P.glass, 'uFrost'), pn.frost);
+      gl.uniform1f(U(P.glass, 'uA'), pn.alpha); gl.uniform1f(U(P.glass, 'uLight'), light);
       gl.uniform4f(U(P.glass, 'uTint'), lerp(1, 0.78, light), lerp(1, 0.83, light), lerp(1, 0.92, light), lerp(0.05, 0.3, light));
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     });
@@ -535,30 +534,42 @@
 
   // Glass panes: DOM elements with .glass; look is tuned per kind.
   $$('.glass').forEach(function (el) {
-    var cl = el.classList, kind = el === nav ? 'nav' : cl.contains('tagline') ? 'tag' : cl.contains('card') ? 'card' : cl.contains('lens') ? 'lens' : 'chip';
-    var look = { nav: [12, 26, 1.0, 0.2], tag: [16, 36, 1.0, 0.32], card: [34, 80, 1.6, 0.5], lens: [90, 190, 0.7, 0.45], chip: [14, 34, 1.0, 0.3] }[kind];
+    var cl = el.classList, kind = cl.contains('pill') ? 'pill' : cl.contains('tagline') ? 'tag' : cl.contains('hl') ? 'hl' : cl.contains('lens') ? 'lens' : 'chip';
+    var look = { pill: [10, 22, 1.0, 0.16], tag: [16, 36, 1.0, 0.32], hl: [26, 60, 1.4, 0.3], lens: [90, 190, 0.7, 0.45], chip: [14, 34, 1.0, 0.3] }[kind];
     panes.push({ el: el, kind: kind, bevel: look[0], thick: look[1], frost: look[2], shadow: look[3], alpha: 0, radius: 0, radiusPct: false, fade: el.closest('[data-fade]') });
   });
 
   /* ================= Main loop ================= */
-  var lenis = null;
   if (motion && window.Lenis) lenis = new window.Lenis({ lerp: 0.08, wheelMultiplier: 1, smoothWheel: true });
 
   glOK = initGL();
   measure();
   if (glOK) { resizeGL(); }
 
-  var hudTick = 0;
+  var lastT = 0, hudTick = 0, emaMs = 16, calm = 0, frame = 0, firstT = 0;
   function tick(t) {
+    if (!firstT) firstT = t;
+    var rawMs = t - (lastT || t - 16);
+    var dt = Math.min(0.05, Math.max(0.001, rawMs / 1000)); lastT = t;
+    // Adaptive quality: if frames run long, step the render resolution down; recover when there is headroom.
+    if (glOK && t - firstT > 3500) {
+      emaMs += (Math.min(rawMs, 100) - emaMs) * 0.06;
+      if (!(frame % 45)) {
+        if (emaMs > 24 && quality > 0.55) { quality = Math.max(0.55, quality * 0.86); resizeGL(); calm = 0; }
+        else if (emaMs < 15.5) { if (++calm > 6 && quality < 1) { quality = Math.min(1, quality * 1.08); resizeGL(); calm = 0; } }
+        else calm = 0;
+      }
+    }
     if (lenis) lenis.raf(t);
     var y = window.scrollY;
-    pointer.sx += (pointer.x - pointer.sx) * 0.06;
-    pointer.sy += (pointer.y - pointer.sy) * 0.06;
-    update(y);
+    pointer.sx += (pointer.x - pointer.sx) * damp(dt, 4);
+    pointer.sy += (pointer.y - pointer.sy) * damp(dt, 4);
+    update(y, dt);
     if (glOK) {
-      render(t, y);
+      render(t, y, dt);
       if (!root.classList.contains('gl')) root.classList.add('gl');
     }
+    frame++;
     if (!(hudTick++ & 3)) {
       hud.x.textContent = (pointer.sx >= 0 ? '+' : '') + pointer.sx.toFixed(2);
       hud.y.textContent = (pointer.sy >= 0 ? '+' : '') + pointer.sy.toFixed(2);
@@ -572,14 +583,17 @@
   window.addEventListener('load', measure);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 
-  // Tabs glide to their scene.
+  // Anchors glide to their section; links inside the menu close it first.
   $$('a[href^="#"]').forEach(function (a) {
     a.addEventListener('click', function (e) {
       var target = document.querySelector(a.getAttribute('href'));
       if (!target) return;
       e.preventDefault();
-      if (lenis) lenis.scrollTo(target, { duration: 1.8, easing: function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; } });
-      else target.scrollIntoView();
+      var go = function () {
+        if (lenis) lenis.scrollTo(target, { duration: 1.8, easing: function (t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; } });
+        else target.scrollIntoView();
+      };
+      if (a.closest('#menu')) { setMenu(false); setTimeout(go, 420); } else go();
     });
   });
 })();
