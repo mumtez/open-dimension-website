@@ -127,10 +127,8 @@ h1 { font: 400 clamp(76px, 17vw, 210px)/.84 var(--serif); letter-spacing: -.04em
 .vision .stage { display: grid; place-items: center; }
 .vision-copy { position: relative; z-index: 2; width: min(980px, calc(100% - 40px)); }
 .statement { font: 400 clamp(38px, 6.2vw, 84px)/1.02 var(--serif); letter-spacing: -.025em; }
-.word { opacity: .14; transition: color .4s var(--ease); }
-.word:hover { color: var(--blue); }
+.word { opacity: .14; }
 .schematic { position: absolute; z-index: 0; width: min(78vmin, 760px); height: min(78vmin, 760px); right: 2vw; top: 50%; margin-top: calc(min(78vmin, 760px) / -2); color: #2a2a2e; }
-.lab.rl { white-space: nowrap; will-change: transform; }
 .lab { position: absolute; font: 500 11px/1 var(--mono); letter-spacing: .1em; opacity: 0; }
 .lens { position: absolute; z-index: 1; width: 36vmin; height: 36vmin; border-radius: 50%; right: 12vw; top: 28vh; will-change: transform; }
 
