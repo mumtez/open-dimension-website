@@ -178,9 +178,7 @@ h1 { font: 400 clamp(76px, 17vw, 210px)/.84 var(--serif); letter-spacing: -.04em
   .vision .stage { justify-items: start; }
   .vision-copy { width: min(720px, 50vw); margin-left: max(var(--pad), 7vw); }
   .statement { font-size: clamp(38px, 4.8vw, 76px); }
-  .lens { right: 7vw; top: 16vh; }
 }
-.lens { position: absolute; z-index: 1; width: 36vmin; height: 36vmin; border-radius: 50%; right: 12vw; top: 28vh; will-change: transform; }
 
 /* ---------- 3. Products: pinned index ---------- */
 .products { height: calc(var(--vh) * 3.35); }
@@ -243,7 +241,6 @@ h1 { font: 400 clamp(76px, 17vw, 210px)/.84 var(--serif); letter-spacing: -.04em
   .wordmark { font-size: 12px; }
   .pill { padding: 0 14px; height: 38px; }
     .schematic { right: -22vmin; opacity: .8; }
-  .lens { right: -6vmin; }
   .vision { height: 300vh; }
   .row { grid-template-columns: 34px 1fr; }
   .row .go { display: none; }
@@ -268,10 +265,8 @@ button:focus:not(:focus-visible) { outline: none; }
 
 html.menu-open, html.menu-open body { overflow: hidden; }
 
-/* Reduced motion: keep decoration out of the text. No WebGL2: a light, non-covering lens. */
-.no-motion .lens { top: auto; bottom: 6vh; }
+/* Reduced motion: keep decoration out of the text. */
 .no-motion .vision .stage { padding: 18vh 0 28vh; }
-html:not(.gl) .lens { background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), rgba(255,255,255,.08)); -webkit-backdrop-filter: none; backdrop-filter: none; z-index: 0; }
 
 /* Short screens (landscape phones, small windows) */
 @media (max-height: 620px) {
@@ -284,7 +279,6 @@ html:not(.gl) .lens { background: radial-gradient(circle at 35% 30%, rgba(255,25
 @media (max-height: 560px) {
   .statement { font-size: clamp(28px, 10vh, 60px); }
   .vision-copy { width: min(60%, 560px); }
-  .lens { top: auto; bottom: 8vh; right: 6vw; width: 28vmin; height: 28vmin; }
   .schematic { width: 62vmin; height: 62vmin; margin-top: -31vmin; right: 0; }
 }
 
@@ -294,7 +288,6 @@ html:not(.gl) .lens { background: radial-gradient(circle at 35% 30%, rgba(255,25
   .bar-right { gap: 6px; }
   .vision .stage { align-content: start; padding-top: calc(88px + 8vh); }
   .statement { font-size: clamp(32px, 9vw, 44px); }
-  .lens { top: auto; bottom: 6vh; right: 6vw; width: 32vmin; height: 32vmin; }
   .schematic { width: 88vw; height: 88vw; right: -20vw; top: 70%; margin-top: -44vw; opacity: .55; }
   .hl { left: -8px; right: -8px; border-radius: 22px; }
   .row { grid-template-columns: 24px 1fr; column-gap: 12px; }

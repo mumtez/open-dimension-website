@@ -24,7 +24,7 @@
   /* ================= DOM references ================= */
   var bar = $('#nav'), mainEl = $('#main');
   var heroInner = $('.hero-inner');
-  var tessEl = $('#tess'), schematic = $('#schematic'), ringsEl = $('#rings'), lensEl = $('.lens');
+  var tessEl = $('#tess'), schematic = $('#schematic'), ringsEl = $('#rings');
   var menu = $('#menu'), menuBtn = $('#menuBtn'), menuLabel = $('.menu-label', menuBtn);
   var menuLinks = $$('[data-link]', menu);
   var inertWhileMenu = [mainEl, $('.wordmark'), $('.bar-right a.pill')];
@@ -168,7 +168,6 @@
         var n = words.length, wp = clamp((visS.p - 0.06) / 0.74) * (n + 5);
         for (i = 0; i < n; i++) sty(words[i], 'opacity', (0.14 + 0.86 * clamp((wp - i) / 5)).toFixed(2));
         state.schematicP = clamp((visS.p - 0.02) / 0.7);
-        sty(lensEl, 'transform', 'scale(' + (0.85 + visS.p * 0.5).toFixed(3) + ')');
       }
       for (i = 0; i < layers.length; i++) {
         var l = layers[i], sc2 = l.scene, d;
@@ -535,7 +534,7 @@
       var lightP = pn.kind === 'pill' ? state.navLight : (sc && sc.theme === 'light' ? 1 : 0);
       var scl = r.width / (pn.el.offsetWidth || r.width);
       var rad = pn.radiusPct ? Math.min(r.width, r.height) * pn.radius / 100 : Math.min(pn.radius * scl, Math.min(r.width, r.height) / 2);
-      var M = pn.kind === 'lens' ? 220 : 110;
+      var M = 110;
       gl.uniform4f(U(P.glass, 'uRect'), r.left - M, r.top - M, r.width + 2 * M, r.height + 2 * M);
       gl.uniform2f(U(P.glass, 'uC'), r.left + r.width / 2, r.top + r.height / 2);
       gl.uniform2f(U(P.glass, 'uH'), r.width / 2, r.height / 2);
@@ -551,8 +550,8 @@
 
   // Glass panes: DOM elements with .glass; look is tuned per kind.
   $$('.glass').forEach(function (el) {
-    var cl = el.classList, kind = cl.contains('pill') ? 'pill' : cl.contains('tagline') ? 'tag' : cl.contains('hl') ? 'hl' : cl.contains('lens') ? 'lens' : 'chip';
-    var look = { pill: [10, 22, 1.0, 0.16], tag: [16, 36, 1.0, 0.32], hl: [26, 60, 1.4, 0.3], lens: [90, 190, 0.7, 0.45], chip: [14, 34, 1.0, 0.3] }[kind];
+    var cl = el.classList, kind = cl.contains('pill') ? 'pill' : cl.contains('tagline') ? 'tag' : cl.contains('hl') ? 'hl' : 'chip';
+    var look = { pill: [10, 22, 1.0, 0.16], tag: [16, 36, 1.0, 0.32], hl: [26, 60, 1.4, 0.3], chip: [14, 34, 1.0, 0.3] }[kind];
     var host = kind === 'pill' ? null : el.closest('[data-scene]');
     panes.push({ el: el, kind: kind, bevel: look[0], thick: look[1], frost: look[2], shadow: look[3], alpha: 0, radius: 0, radiusPct: false, fade: el.closest('[data-fade]'), scene: host ? sceneBy[host.dataset.scene] : null });
   });
