@@ -6,13 +6,23 @@
 <title>Open Dimension</title>
 <meta name="description" content="Open Dimension. Something new is on its way.">
 <meta name="theme-color" content="#000000">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.35' cy='.3' r='.8'%3E%3Cstop offset='0' stop-color='%23fff'/%3E%3Cstop offset='.3' stop-color='%238ad1ff'/%3E%3Cstop offset='1' stop-color='%231d63c8'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='%23000'/%3E%3Ccircle cx='16' cy='16' r='8' fill='url(%23g)'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Open Dimension">
+<meta property="og:description" content="Open Dimension. Something new is on its way.">
+<meta property="og:url" content="https://open-dimension.com/">
+<meta property="og:image" content="https://open-dimension.com/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="assets/fonts/fonts.css">
 <link rel="stylesheet" href="styles.css">
 <script>
   try { document.documentElement.classList.add(matchMedia('(prefers-reduced-motion: reduce)').matches ? 'no-motion' : 'motion'); } catch (e) {}
+  setTimeout(function () { var r = document.documentElement; if (!r.classList.contains('ready')) { r.classList.remove('motion'); r.classList.add('no-motion', 'ready'); } }, 9000);
 </script>
 </head>
 <body>
+
+<a class="skip" href="#main">Skip to content</a>
 
 <!-- Intro: counter, then two diagonal panels slide away. -->
 <div class="loader" id="loader" aria-hidden="true">
@@ -39,7 +49,7 @@
     <a href="#studio" data-link="studio"><span class="n">03</span><span class="mk"><span>Studio</span></span></a>
     <a href="#contact" data-link="contact"><span class="n">04</span><span class="mk"><span>Contact</span></span></a>
   </nav>
-  <div class="menu-foot"><span>open-dimension.com</span><span>REV 01 &mdash; 2026</span></div>
+  <div class="menu-foot"><span>open-dimension.com</span><span>&copy; 2026</span></div>
 </div>
 
 <div class="where" id="where" data-theme="dark" aria-hidden="true">
@@ -48,14 +58,11 @@
   <i class="where-bar"><b id="whereB"></b></i>
 </div>
 
-<main>
+<main id="main" tabindex="-1">
 
   <!-- 1. Hero -->
   <section class="scene hero" id="top" data-scene="hero" data-theme="dark">
     <div class="tess" id="tess" aria-hidden="true"></div>
-    <div class="hud tl" aria-hidden="true">OPEN DIMENSION<br>REV 01 &mdash; 2026</div>
-    <div class="hud tr" aria-hidden="true">X <b id="hx">+0.00</b><br>Y <b id="hy">+0.00</b></div>
-    <div class="hud br" aria-hidden="true">&theta; <b id="ht">000.0</b>&deg;</div>
     <div class="hero-inner">
       <h1><span class="ln"><span>Open</span></span><span class="ln"><span><span class="grad">Dimension</span><span class="dot">.</span></span></span></h1>
       <p class="tagline glass">Something new is on its way.</p>
@@ -66,14 +73,11 @@
   <!-- 2. Vision: a schematic draws itself while the words light up -->
   <section class="scene vision" id="vision" data-scene="vision" data-theme="light">
     <div class="stage">
-      <div class="schematic" id="schematic" data-depth="-0.4" aria-hidden="true">
-        <span class="lab fade" style="left:72.7%;top:37.7%">r = 1.000</span>
-        <span class="lab fade" style="left:43%;top:89.7%">&#216; 2.000</span>
-        <span class="lab fade" style="left:52%;top:7.3%">+Y</span>
-        <span class="lab fade" style="left:91.3%;top:48.7%">+X</span>
+      <h2 class="sr-only">Vision</h2>
+      <div class="schematic" id="schematic" data-depth="-0.12" aria-hidden="true">
       </div>
-      <div class="glass lens" data-depth="0.28" aria-hidden="true"></div>
-      <div class="vision-copy" data-depth="0.1">
+      <div class="glass lens" data-depth="0.12" aria-hidden="true"></div>
+      <div class="vision-copy" data-depth="0.04">
         <p class="eyebrow">01 &mdash; Vision</p>
         <p class="statement" data-reveal>We&rsquo;re a small team building something we think is worth building. We&rsquo;ll tell you what it is when it&rsquo;s ready. Until then, consider this a door left slightly open.</p>
       </div>
@@ -95,7 +99,7 @@
           <li class="glass hl" id="hl" aria-hidden="true"></li>
           <li class="row"><span class="n">01</span><h3 class="t"><span class="mk"><span>Think bigger.</span></span></h3><p class="d">Introducing something new.</p><span class="go">Details soon</span></li>
           <li class="row"><span class="n">02</span><h3 class="t"><span class="mk"><span>Made to be opened.</span></span></h3><p class="d">A different way in.</p><span class="go">Details soon</span></li>
-          <li class="row"><span class="n">03</span><h3 class="t"><span class="mk"><span>Another point of view.</span></span></h3><p class="d">Coming into focus.</p><span class="go">Details soon</span></li>
+          <li class="row"><span class="n">03</span><h3 class="t"><span class="mk"><span>Another point of view.</span></span></h3><p class="d">Seen from the side.</p><span class="go">Details soon</span></li>
           <li class="row"><span class="n">04</span><h3 class="t"><span class="mk"><span>One more thing.</span></span></h3><p class="d">Not yet.</p><span class="go">Details soon</span></li>
         </ul>
       </div>
@@ -104,14 +108,14 @@
 
   <!-- 4. Studio -->
   <section class="scene studio" id="studio" data-scene="studio" data-theme="light">
-    <div class="rings" id="rings" data-depth="-0.35" aria-hidden="true"></div>
+    <div class="rings" id="rings" data-depth="0.06" aria-hidden="true"></div>
     <div class="studio-inner">
       <p class="eyebrow">03 &mdash; Studio</p>
-      <h2 data-mask data-depth="0.08">Small team.<br>Big dimension.</h2>
+      <h2 data-mask data-depth="0.06">Small team.<br>Big dimension.</h2>
       <div class="chips" data-fade>
-        <div class="glass chip" data-depth="0.22">Design</div>
-        <div class="glass chip" data-depth="0.3">Engineering</div>
-        <div class="glass chip" data-depth="0.38">Curiosity</div>
+        <div class="glass chip" data-depth="0.1">Design</div>
+        <div class="glass chip" data-depth="0.14">Engineering</div>
+        <div class="glass chip" data-depth="0.18">Curiosity</div>
       </div>
     </div>
   </section>
@@ -122,7 +126,8 @@
       <h2 data-mask>Say hello<span class="dot">.</span></h2>
       <p data-fade>Contact details coming soon.</p>
     </div>
-    <p class="legal">Copyright &copy; <span id="year">2026</span> Open Dimension. All rights reserved. &middot; open-dimension.com</p>
+    <p class="legal"><span>&copy; <span id="year">2026</span> Open Dimension</span></p>
+    <a class="totop" href="#top">Back to top</a>
   </footer>
 
 </main>
