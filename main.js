@@ -13,7 +13,7 @@
   var $ = function (s, c) { return (c || document).querySelector(s); };
   var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
   // Motion rates (per second) used by the frame loop: quick feedback, normal state change, soft settle.
-  var RATE_FAST = 12, RATE_BASE = 8, RATE_SOFT = 5;
+  var RATE_BASE = 8, RATE_SOFT = 5;
 
   // Write-through caches: skip DOM writes whose value has not changed (keeps layout and style clean).
   function sty(el, prop, val) { var c = el._c || (el._c = {}); if (c[prop] !== val) { c[prop] = val; el.style[prop] = val; } }
@@ -323,7 +323,7 @@
 
   function initGL() {
     if (reduceTransparency) return false;
-    try { gl = glc.getContext('webgl2', { alpha: false, antialias: false, powerPreference: 'high-performance' }); } catch (e) { gl = null; }
+    try { gl = glc.getContext('webgl2', { alpha: false, antialias: false, powerPreference: 'high-performance' }); } catch { gl = null; }
     if (!gl) return false;
     try {
       P = {};
@@ -564,6 +564,18 @@
   measure();
   if (glOK) resizeGL();
 
+  // ?perf shows frame time, render scale and the GPU in a corner overlay, so real-device numbers can be pasted back.
+  var perfEl = null, perfAt = 0;
+  if (/[?&]perf\b/.test(location.search)) {
+    perfEl = document.createElement('pre');
+    perfEl.style.cssText = 'position:fixed;z-index:999;left:8px;top:8px;margin:0;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,.75);color:#7CFC9A;font:11px/1.4 ui-monospace,Menlo,monospace;pointer-events:none';
+    document.body.appendChild(perfEl);
+  }
+  function perfText() {
+    var ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+    return 'frame ' + emaMs.toFixed(1) + ' ms (' + Math.round(1000 / emaMs) + ' fps)\nscale ' + S.toFixed(2) + ' (quality ' + quality.toFixed(2) + ')\ncanvas ' + W + 'x' + H + '\ngpu ' + (ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : glOK ? 'webgl2' : 'none (CSS fallback)');
+  }
+
   var lastT = 0, emaMs = 16, calm = 0, frame = 0, firstT = 0, lastQ = 0;
   function tick(t) {
     requestAnimationFrame(tick);
@@ -590,6 +602,7 @@
         if (!root.classList.contains('gl')) root.classList.add('gl');
       }
       frame++;
+      if (perfEl && t - perfAt > 500) { perfAt = t; perfEl.textContent = perfText(); }
     } catch (err) {
       console.warn('frame error, falling back to CSS visuals', err);
       if (glOK) { glOK = false; root.classList.remove('gl'); }

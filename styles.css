@@ -17,7 +17,7 @@
   --ease: cubic-bezier(.22, .9, .2, 1);
   --ease-io: cubic-bezier(.76, 0, .24, 1);
   /* Motion scale: feedback / state / reveal / cinematic */
-  --t-fast: .3s; --t-base: .6s; --t-slow: 1.2s; --t-cine: 1.6s;
+  --t-fast: .3s; --t-base: .6s; --t-slow: 1.2s; --t-cine: 1.6s; --t-loop: 2s;
   --pad: clamp(18px, 4vw, 56px);
   --vh: 100vh;
 }
@@ -128,7 +128,6 @@ html.lenis, html.lenis body { height: auto; }
 
 /* ---------- Loader ---------- */
 .loader { position: fixed; inset: 0; z-index: 200; pointer-events: none; display: none; }
-.motion .loader { display: block; }
 .lp { position: absolute; inset: 0; background: #000; transition: transform var(--t-slow) var(--ease-io); }
 .lp.a { clip-path: polygon(0 0, 100% 0, 0 100%); }
 .lp.b { clip-path: polygon(100% 0, 100% 100%, 0 100%); }
@@ -140,7 +139,7 @@ html.lenis, html.lenis body { height: auto; }
 .loader.done .lp.a { transform: translate(-101%, -101%); } .loader.done .lp.b { transform: translate(101%, 101%); }
 .no-motion .loader, .motion .loader.gone { display: none; }
 @keyframes loaderfail { to { visibility: hidden; } }
-.motion .loader { animation: loaderfail 0s 7s forwards; }
+.motion .loader { display: block; animation: loaderfail 0s 7s forwards; }
 
 /* ---------- 1. Hero ---------- */
 .hero { height: var(--vh); min-height: 0; display: grid; place-items: center; text-align: center; }
@@ -153,7 +152,7 @@ h1 { font: 400 clamp(76px, 17vw, 210px)/.84 var(--serif); letter-spacing: -.04em
 .dot { color: var(--blue); }
 .tagline { display: inline-block; margin-top: 30px; padding: 14px 30px; border-radius: 999px; font: 400 clamp(22px, 3vw, 34px)/1.1 var(--serif); letter-spacing: -.01em; color: #fff; }
 .scroll-hint { position: absolute; z-index: 2; bottom: 22px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: rgba(245,245,247,.7); }
-.scroll-hint i { display: block; width: 1px; height: 26px; background: linear-gradient(rgba(255,255,255,.7), transparent); transform-origin: top; animation: hint 2s var(--ease) infinite; }
+.scroll-hint i { display: block; width: 1px; height: 26px; background: linear-gradient(rgba(255,255,255,.7), transparent); transform-origin: top; animation: hint var(--t-loop) var(--ease) infinite; }
 @keyframes hint { 0% { transform: scaleY(0); opacity: 1; } 55% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
 
 /* Intro (starts when the loader leaves): headline lines rise out of a mask, then everything else fades in. */
@@ -219,7 +218,7 @@ h1 { font: 400 clamp(76px, 17vw, 210px)/.84 var(--serif); letter-spacing: -.04em
 /* ---------- 5. Contact ---------- */
 .contact { min-height: var(--vh); display: grid; place-items: center; text-align: center; padding: 14vh 20px 90px; }
 .contact-inner { position: relative; z-index: 1; }
-.contact h2 { font: 400 clamp(60px, 12vw, 160px)/.88 var(--serif); letter-spacing: -.04em; }
+.contact h2 { font: 400 clamp(72px, 15vw, 220px)/.88 var(--serif); letter-spacing: -.04em; }
 .contact-inner p { margin-top: 18px; color: var(--muted-dark); font: 400 clamp(22px, 3vw, 32px)/1.1 var(--serif); }
 .legal { position: absolute; z-index: 1; bottom: 64px; left: var(--pad); right: var(--pad); text-align: center; text-wrap: balance; font: 11px/1.4 var(--mono); letter-spacing: .06em; color: rgba(245,245,247,.58); }
 @media (min-width: 900px) { .legal { bottom: 26px; } }
@@ -299,4 +298,3 @@ html.menu-open, html.menu-open body { overflow: hidden; }
 .menu-links .peek { position: absolute; right: 0; top: 50%; max-width: 30ch; text-align: right; font: 400 clamp(20px, 2.4vw, 32px)/1.15 var(--serif); letter-spacing: -.01em; color: var(--muted-dark); opacity: 0; transform: translate3d(14px, -50%, 0); transition: opacity var(--t-base) var(--ease), transform var(--t-slow) var(--ease); pointer-events: none; }
 .menu-links a:hover .peek, .menu-links a:focus-visible .peek { opacity: 1; transform: translate3d(0, -50%, 0); }
 @media (max-width: 900px) { .menu-links .peek { display: none; } }
-.contact h2 { font-size: clamp(72px, 15vw, 220px); }

@@ -4,10 +4,9 @@
 
 Issues are tracked in this repo's GitHub Issues via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
-### Triage labels
+## Working in this repo
 
-Uses the five default triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+- Design constraints and retired ideas: `docs/design-principles.md`.
+- Couplings between CSS, JS and HTML, plus commands: `docs/architecture.md`.
+- Review rules: `CODING_STANDARDS.md`.
+- Verify with `npm run check`; for visual changes also `npm run shoot` and read `shots/sheet-desktop.png`.

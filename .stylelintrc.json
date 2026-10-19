@@ -1,0 +1,11 @@
+{
+  "extends": "stylelint-config-recommended",
+  "rules": {
+    "declaration-property-value-disallowed-list": {
+      "/^(transition|animation)$/": [
+        "/(^|,)\\s*[a-z-]+\\s+[1-9.]\\d*\\.?\\d*m?s\\b/"
+      ]
+    },
+    "no-descending-specificity": null
+  }
+}

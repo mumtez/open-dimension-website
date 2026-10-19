@@ -1,0 +1,3 @@
+#!/bin/sh
+# Enabled by `git config core.hooksPath .githooks` (set up by `npm run prepare`).
+exec npm run --silent check
