@@ -476,7 +476,8 @@
       gl.uniform1f(U(P.bg, 'uTopY'), sr.top); gl.uniform1f(U(P.bg, 'uCorner'), hero ? 0 : CORNER);
       gl.uniform3f(U(P.bg, 'uBg'), light ? 0.9608 : 0, light ? 0.9608 : 0, light ? 0.9686 : 0);
       gl.uniform3f(U(P.bg, 'uGrid'), light ? 0 : 0.55, light ? 0 : 0.85, light ? 0 : 1);
-      gl.uniform2f(U(P.bg, 'uA'), light ? 0.06 : 0.095, light ? 0.14 : 0.21);
+      var cm = s.kind === 'contact' ? 0.55 : 1;     // quieter lines behind the closing headline
+      gl.uniform2f(U(P.bg, 'uA'), light ? 0.05 : 0.095 * cm, light ? 0.115 : 0.21 * cm);
       gl.uniform1f(U(P.bg, 'uOff'), off);
       gl.uniform2f(U(P.bg, 'uMaskC'), vw / 2, mcy);
       gl.uniform2f(U(P.bg, 'uMaskR'), vw / 2 * 1.4142, mh);

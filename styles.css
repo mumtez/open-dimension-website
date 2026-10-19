@@ -102,7 +102,7 @@ html.lenis, html.lenis body { height: auto; }
 .menu-bg { position: absolute; inset: 0; background: radial-gradient(120% 90% at 85% 10%, #0d0f16 0%, #06060a 55%); clip-path: circle(0px at var(--ox, 90%) var(--oy, 40px)); transition: clip-path var(--t-slow) var(--ease-io); }
 .menu.open .menu-bg { clip-path: circle(150vmax at var(--ox, 90%) var(--oy, 40px)); }
 .menu-links { position: absolute; left: var(--pad); right: var(--pad); top: 50%; transform: translateY(-48%); display: flex; flex-direction: column; }
-.menu-links a { display: flex; align-items: baseline; gap: clamp(14px, 3vw, 36px); padding: 4px 0; transition: opacity var(--t-base) var(--ease); }
+.menu-links a { position: relative; display: flex; align-items: baseline; gap: clamp(14px, 3vw, 36px); padding: 4px 0; transition: opacity var(--t-base) var(--ease); }
 .menu-links .n { font: 500 12px/1 var(--mono); letter-spacing: .12em; color: var(--muted-dark); width: 2.2em; }
 .menu-links .mk { font: 400 clamp(48px, min(11vw, 15vh), 150px)/1 var(--serif); letter-spacing: -.035em; }
 .menu-links:hover a { opacity: .28; } .menu-links a:hover { opacity: 1; }
@@ -294,3 +294,9 @@ html.menu-open, html.menu-open body { overflow: hidden; }
   .row.active { transform: translateX(6px); }
   .contact h2 { font-size: clamp(64px, 17vw, 96px); }
 }
+
+/* Menu: a quiet one-line preview appears on the right for the hovered/focused link */
+.menu-links .peek { position: absolute; right: 0; top: 50%; max-width: 30ch; text-align: right; font: 400 clamp(20px, 2.4vw, 32px)/1.15 var(--serif); letter-spacing: -.01em; color: var(--muted-dark); opacity: 0; transform: translate3d(14px, -50%, 0); transition: opacity var(--t-base) var(--ease), transform var(--t-slow) var(--ease); pointer-events: none; }
+.menu-links a:hover .peek, .menu-links a:focus-visible .peek { opacity: 1; transform: translate3d(0, -50%, 0); }
+@media (max-width: 900px) { .menu-links .peek { display: none; } }
+.contact h2 { font-size: clamp(72px, 15vw, 220px); }
