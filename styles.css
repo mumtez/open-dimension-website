@@ -208,7 +208,6 @@ h1 { font: 400 clamp(76px, 17vw, 210px)/.84 var(--serif); letter-spacing: -.04em
 
 /* ---------- 5. Contact ---------- */
 .contact { min-height: 90vh; display: grid; place-items: center; text-align: center; padding: 14vh 20px 90px; }
-.contact-art { position: absolute; left: 0; right: 0; bottom: -6vh; height: 70vh; pointer-events: none; }
 .contact-inner { position: relative; z-index: 1; }
 .contact h2 { font: 400 clamp(60px, 12vw, 160px)/.88 var(--serif); letter-spacing: -.04em; }
 .contact-inner p { margin-top: 18px; color: var(--muted-dark); font: 400 clamp(22px, 3vw, 32px)/1.1 var(--serif); }

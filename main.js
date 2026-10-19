@@ -17,7 +17,7 @@
   /* ================= DOM references ================= */
   var bar = $('#nav');
   var heroInner = $('.hero-inner');
-  var tessEl = $('#tess'), schematic = $('#schematic'), ringsEl = $('#rings'), contactArt = $('#contactArt'), lensEl = $('.lens');
+  var tessEl = $('#tess'), schematic = $('#schematic'), ringsEl = $('#rings'), lensEl = $('.lens');
   var labs = $$('.lab', schematic);
   var menu = $('#menu'), menuBtn = $('#menuBtn'), menuLabel = $('.menu-label', menuBtn);
   var menuLinks = $$('[data-link]', menu);
@@ -174,38 +174,21 @@
     hl.style.transform = 'translate3d(0,' + hlY.toFixed(2) + 'px,0)';
 
     // which scene is under the bar / centred in view
-    var theme = 'dark', current = 'hero';
+    var theme = 'dark', whereTheme = 'dark', current = 'hero';
     for (var j = 0; j < scenes.length; j++) {
       var s = scenes[j], top = s.top - y, bot = top + s.h;
       if (top <= 40 && bot > 40) theme = s.theme;
+      if (top <= vh - 30 && bot > vh - 30) whereTheme = s.theme;
       if (top <= vh * 0.45 && bot > vh * 0.45) current = s.kind;
     }
     state.theme = theme;
-    if (bar.dataset.theme !== theme) { bar.dataset.theme = theme; whereEl.dataset.theme = theme; }
+    if (bar.dataset.theme !== theme) bar.dataset.theme = theme;
+    if (whereEl.dataset.theme !== whereTheme) whereEl.dataset.theme = whereTheme;
     setWhere(current);
     menuLinks.forEach(function (a) { a.classList.toggle('is-active', a.dataset.link === current); });
   }
 
   /* ================= Wireframe geometry ================= */
-  function ring(n, f) { var p = []; for (var i = 0; i <= n; i++) p.push(f(i / n * TAU)); return p; }
-  var waveLines = (function () {
-    var L = [], N = 19, i, j, row, col;
-    for (i = 0; i < N; i++) {
-      row = []; col = [];
-      for (j = 0; j < N; j++) {
-        var x = i / (N - 1) * 2 - 1, y = j / (N - 1) * 2 - 1;
-        row.push([x * 0.95, 0, y * 0.95]); col.push([y * 0.95, 0, x * 0.95]);
-      }
-      L.push(row, col);
-    }
-    return L;
-  })();
-  function waveStep(lines, t) {
-    for (var i = 0; i < lines.length; i++) for (var j = 0; j < lines[i].length; j++) {
-      var p = lines[i][j], d = Math.sqrt(p[0] * p[0] + p[2] * p[2]);
-      p[1] = Math.sin(d * 6 - t * 0.0016) * 0.2 * (1 - d * 0.4);
-    }
-  }
   var T4 = { v: [], e: [] };
   (function () {
     var i, j;
@@ -347,22 +330,6 @@
     var o = nseg++ * SEGF;
     seg[o] = ax; seg[o + 1] = ay; seg[o + 2] = bx; seg[o + 3] = by; seg[o + 4] = r; seg[o + 5] = g; seg[o + 6] = b; seg[o + 7] = a; seg[o + 8] = w; seg[o + 9] = glow;
   }
-  var tx_ = new Float32Array(256), ty_ = new Float32Array(256), tz_ = new Float32Array(256);
-  function emitShape(lines, cx, cy, R, rx, ry, col, alpha, glow, w) {
-    var cX = Math.cos(rx), sX = Math.sin(rx), cY = Math.cos(ry), sY = Math.sin(ry);
-    for (var i = 0; i < lines.length; i++) {
-      var pl = lines[i], n = pl.length, k;
-      for (k = 0; k < n; k++) {
-        var p = pl[k], x1 = p[0] * cY + p[2] * sY, z1 = -p[0] * sY + p[2] * cY;
-        var y2 = p[1] * cX - z1 * sX, z2 = p[1] * sX + z1 * cX, s = 3.4 / (3.4 - z2);
-        tx_[k] = cx + x1 * s * R; ty_[k] = cy + y2 * s * R; tz_[k] = z2;
-      }
-      for (k = 0; k < n - 1; k++) {
-        var depth = clamp(0.55 + (tz_[k] + tz_[k + 1]) * 0.25);
-        push(tx_[k], ty_[k], tx_[k + 1], ty_[k + 1], col[0], col[1], col[2], (0.22 + depth * 0.7) * alpha, w, glow);
-      }
-    }
-  }
   function emitCircle(cx, cy, r, a0, a1, n, c, a, w) {
     var px = cx + Math.cos(a0) * r, py = cy + Math.sin(a0) * r;
     for (var i = 1; i <= n; i++) {
@@ -443,13 +410,6 @@
       emitDashRing(cx, cy, 320 * k, 1 * k, 7 * k, tm * 0.00007, ink, 0.5, 1.2);
       emitDashRing(cx, cy, 250 * k, 40 * k, 14 * k, -tm * 0.00004, ink, 0.45, 1.2);
       emitCircle(cx, cy, 170 * k, 0, TAU, 90, ink, 0.4, 1.2);
-    });
-
-    // contact wave (additive on dark)
-    range('contact', 0, function () {
-      var r = rectOf(contactArt), tm = motion ? t : 0;
-      waveStep(waveLines, tm);
-      emitShape(waveLines, r.left + r.width / 2, r.top + r.height * 0.55, Math.min(r.width * 0.42, r.height * 0.9), -1.12, Math.sin(tm * 0.00015) * 0.25, [0.39, 0.82, 1], 0.7, 0.4, 1.2);
     });
 
     /* ---- pass A: scene backgrounds + lines → bg texture ---- */
