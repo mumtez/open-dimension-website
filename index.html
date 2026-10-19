@@ -80,18 +80,25 @@
     </div>
   </section>
 
-  <!-- 3. Products: a quiet index; a glass bar slides to the row you hover -->
+  <!-- 3. Products: pinned; scroll steps a glass bar through the rows until the last one lands, then the page continues -->
   <section class="scene products" id="products" data-scene="products" data-theme="dark">
-    <div class="products-in">
-      <p class="eyebrow">02 &mdash; Products</p>
-      <h2 data-mask>Coming<br>into focus.</h2>
-      <ul class="plist" id="plist">
-        <li class="glass hl" id="hl" aria-hidden="true"></li>
-        <li class="row"><span class="n">01</span><h3 class="t"><span class="mk"><span>Think bigger.</span></span></h3><p class="d">Introducing something new.</p><span class="go">Details soon</span></li>
-        <li class="row"><span class="n">02</span><h3 class="t"><span class="mk"><span>Made to be opened.</span></span></h3><p class="d">A different way in.</p><span class="go">Details soon</span></li>
-        <li class="row"><span class="n">03</span><h3 class="t"><span class="mk"><span>Another point of view.</span></span></h3><p class="d">Coming into focus.</p><span class="go">Details soon</span></li>
-        <li class="row"><span class="n">04</span><h3 class="t"><span class="mk"><span>One more thing.</span></span></h3><p class="d">Not yet.</p><span class="go">Details soon</span></li>
-      </ul>
+    <div class="stage">
+      <div class="products-in">
+        <div class="products-top">
+          <div>
+            <p class="eyebrow">02 &mdash; Products</p>
+            <h2 data-mask>Coming into focus.</h2>
+          </div>
+          <span class="pcount" id="pcount" aria-hidden="true">01 / 04</span>
+        </div>
+        <ul class="plist" id="plist">
+          <li class="glass hl" id="hl" aria-hidden="true"></li>
+          <li class="row"><span class="n">01</span><h3 class="t"><span class="mk"><span>Think bigger.</span></span></h3><p class="d">Introducing something new.</p><span class="go">Details soon</span></li>
+          <li class="row"><span class="n">02</span><h3 class="t"><span class="mk"><span>Made to be opened.</span></span></h3><p class="d">A different way in.</p><span class="go">Details soon</span></li>
+          <li class="row"><span class="n">03</span><h3 class="t"><span class="mk"><span>Another point of view.</span></span></h3><p class="d">Coming into focus.</p><span class="go">Details soon</span></li>
+          <li class="row"><span class="n">04</span><h3 class="t"><span class="mk"><span>One more thing.</span></span></h3><p class="d">Not yet.</p><span class="go">Details soon</span></li>
+        </ul>
+      </div>
     </div>
   </section>
 

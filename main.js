@@ -21,7 +21,7 @@
   var labs = $$('.lab', schematic);
   var menu = $('#menu'), menuBtn = $('#menuBtn'), menuLabel = $('.menu-label', menuBtn);
   var menuLinks = $$('[data-link]', menu);
-  var plist = $('#plist'), hl = $('#hl'), rows = $$('.row', plist);
+  var plist = $('#plist'), hl = $('#hl'), rows = $$('.row', plist), pcount = $('#pcount');
   var whereEl = $('#where'), whereN = $('#whereN'), whereT = $('#whereT'), whereB = $('#whereB');
   var hud = { x: $('#hx'), y: $('#hy'), t: $('#ht') };
 
@@ -119,7 +119,6 @@
     vw = window.innerWidth; vh = window.innerHeight;
     var sy = window.scrollY;
     scenes.forEach(function (s) { var r = s.el.getBoundingClientRect(); s.top = r.top + sy; s.h = r.height; });
-    if (rows.length) plist.style.setProperty('--rowh', rows[0].offsetHeight + 'px');
     panes.forEach(function (p) {
       var cs = getComputedStyle(p.el).borderRadius;
       p.radiusPct = /%/.test(cs); p.radius = parseFloat(cs) || 0;
@@ -128,9 +127,9 @@
   }
 
   /* ================= Products: glass bar slides to the hovered row ================= */
-  var hlTarget = null, hlY = 0, hlOn = 0;
-  rows.forEach(function (row) { row.addEventListener('mouseenter', function () { hlTarget = row; }); });
-  plist.addEventListener('mouseleave', function () { hlTarget = null; });
+  var hoverRow = null, activeRow = null, hlY = 0, hlH = 0, hlOn = 0;
+  rows.forEach(function (row) { row.addEventListener('mouseenter', function () { hoverRow = row; }); });
+  plist.addEventListener('mouseleave', function () { hoverRow = null; });
 
   /* ================= Per-frame DOM update (writes only) ================= */
   var state = { sp: 0, heroAlpha: 1, tessScale: 1, tessAlpha: 1, schematicP: 0, navLight: 0, theme: 'dark', tessAngle: 0 };
@@ -160,18 +159,29 @@
       }
       for (i = 0; i < layers.length; i++) {
         var l = layers[i], sc2 = l.scene, rt = sc2.top - y, d;
-        if (sc2.kind === 'vision') d = (sc2.p - 0.5) * vh;
+        if (sc2.kind === 'vision' || sc2.kind === 'products') d = (sc2.p - 0.5) * vh;
         else if (sc2.kind === 'hero') d = clamp(y / vh) * vh * 0.6;
         else d = vh / 2 - (rt + sc2.h / 2);
         l.el.style.translate = '0 ' + (-d * l.s).toFixed(2) + 'px';
       }
     }
 
-    // hover bar: slide to the row, fade in/out
-    var want = hlTarget ? 1 : 0;
-    if (hlTarget) { var ty = hlTarget.offsetTop; if (hlOn < 0.05) hlY = ty; else hlY += (ty - hlY) * damp(dt, 13); }
-    hlOn += (want - hlOn) * damp(dt, 9);
+    // Products: while pinned, scroll steps through the rows (the last one holds a beat, then the page continues).
+    // Hover overrides. The glass bar glides to the active row.
+    var prod = sceneBy.products, nRows = rows.length;
+    var inView = y > prod.top - vh * 0.55 && y < prod.top + prod.h - vh * 0.1;
+    var idx = motion ? Math.min(nRows - 1, Math.floor(clamp((y - prod.top) / Math.max(1, prod.h - vh)) * (nRows + 0.5))) : 0;
+    var act = hoverRow || rows[idx];
+    if (act !== activeRow) {
+      if (activeRow) activeRow.classList.remove('active');
+      activeRow = act; act.classList.add('active');
+      pcount.textContent = '0' + (rows.indexOf(act) + 1) + ' / 0' + nRows;
+    }
+    var tY = act.offsetTop, tH = act.offsetHeight;
+    if (hlOn < 0.05 || !hlH) { hlY = tY; hlH = tH; } else { var kk = damp(dt, 9); hlY += (tY - hlY) * kk; hlH += (tH - hlH) * kk; }
+    hlOn += ((inView || hoverRow ? 1 : 0) - hlOn) * damp(dt, 8);
     hl.style.transform = 'translate3d(0,' + hlY.toFixed(2) + 'px,0)';
+    hl.style.height = hlH.toFixed(1) + 'px';
 
     // which scene is under the bar / centred in view
     var theme = 'dark', whereTheme = 'dark', current = 'hero';
@@ -218,16 +228,18 @@
   // Background: scene colour + topographic contour lines (isolines of a slowly drifting noise field).
   var FS_BG = '#version 300 es\nprecision highp float; in vec2 vP; out vec4 o;\n' +
     'uniform vec3 uBg; uniform vec3 uGrid; uniform float uOff; uniform vec2 uMaskC; uniform vec2 uMaskR; uniform vec2 uA; uniform float uTime;\n' +
+    'uniform vec2 uVp; uniform float uTopY, uCorner;\n' +
     'float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }\n' +
     'float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x), mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x), f.y); }\n' +
     'float fbm(vec2 p){ float a=.5, s=0.; for(int i=0;i<4;i++){ s+=a*vn(p); p=p*2.03+vec2(17.,9.); a*=.5; } return s; }\n' +
     'float iso(float v){ float d=abs(fract(v-.5)-.5)/max(fwidth(v),1e-4); return 1.-smoothstep(0.,1.3,d); }\n' +
     'void main(){\n' +
+    ' float cov=1.; if(uCorner>0.&&vP.y-uTopY<uCorner){ float cx=clamp(vP.x,uCorner,uVp.x-uCorner); cov=clamp(uCorner-length(vec2(vP.x-cx,vP.y-(uTopY+uCorner)))+.5,0.,1.); }\n' +
     ' vec2 q=vec2(vP.x,vP.y-uOff)/300.+vec2(uTime*.000022,-uTime*.000015);\n' +
     ' float n=fbm(q)*15.;\n' +
     ' float g=max(iso(n)*uA.x, iso(n/5.+.31)*uA.y);\n' +
     ' float m=1.-smoothstep(.2,.8,length((vP-uMaskC)/uMaskR)); vec3 c=mix(uBg,uGrid,g*m);\n' +
-    ' c+=(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453)-.5)/255.; o=vec4(c,1.); }';
+    ' c+=(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453)-.5)/255.; o=vec4(c*cov,cov); }';
 
   var VS_LINE = '#version 300 es\nlayout(location=0) in vec2 aA; layout(location=1) in vec2 aB; layout(location=2) in vec4 aC; layout(location=3) in vec2 aW;\n' +
     'uniform vec2 uRes; uniform float uHalf; out float vS; out vec4 vC; out vec2 vW;\n' +
@@ -415,20 +427,23 @@
     /* ---- pass A: scene backgrounds + lines → bg texture ---- */
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.viewport(0, 0, W, H);
-    gl.disable(gl.SCISSOR_TEST); gl.disable(gl.BLEND);
+    gl.disable(gl.SCISSOR_TEST); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.bindVertexArray(vaoQuad);
     gl.useProgram(P.bg);
-    gl.uniform2f(U(P.bg, 'uRes'), vw, vh);
-    sceneRects.forEach(function (sr) {
+    gl.uniform2f(U(P.bg, 'uRes'), vw, vh); gl.uniform2f(U(P.bg, 'uVp'), vw, vh);
+    var CORNER = Math.min(46, vw * 0.04);
+    sceneRects.forEach(function (sr, si) {
       if (sr.bot < 0 || sr.top > vh) return;
-      var s = sr.s, light = s.theme === 'light', pinned = s.kind === 'vision', hero = s.kind === 'hero';
+      var s = sr.s, light = s.theme === 'light', pinned = s.kind === 'vision' || s.kind === 'products', hero = s.kind === 'hero';
       var d, depth;
       if (pinned) d = (s.p - 0.5) * vh; else if (hero) d = clamp(y / vh) * vh * 0.6; else d = vh / 2 - (sr.top + s.h / 2);
       depth = hero ? 0.18 : 0.2;
       var off = (pinned || hero ? 0 : sr.top) + (motion ? d * depth : 0);
       var mc = (pinned || hero) ? [vw / 2, vh / 2] : [vw / 2, sr.top + s.h / 2];
       var mh = ((pinned || hero) ? vh * 1.32 : s.h * 1.32) / 2 * 1.4142;
-      gl.uniform4f(U(P.bg, 'uRect'), 0, sr.top, vw, s.h);
+      gl.uniform4f(U(P.bg, 'uRect'), 0, sr.top, vw, s.h + (si < sceneRects.length - 1 ? CORNER : 0));
+      gl.uniform1f(U(P.bg, 'uTopY'), sr.top); gl.uniform1f(U(P.bg, 'uCorner'), hero ? 0 : CORNER);
       gl.uniform3f(U(P.bg, 'uBg'), light ? 0.9608 : 0, light ? 0.9608 : 0, light ? 0.9686 : 0);
       gl.uniform3f(U(P.bg, 'uGrid'), light ? 0 : 0.55, light ? 0 : 0.85, light ? 0 : 1);
       gl.uniform2f(U(P.bg, 'uA'), light ? 0.06 : 0.095, light ? 0.14 : 0.21);
