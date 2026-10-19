@@ -232,11 +232,18 @@
     'void main(){ vec2 c=vec2(float(gl_VertexID&1),float((gl_VertexID>>1)&1)); vec2 p=uRect.xy+c*uRect.zw; vP=p;\n' +
     ' gl_Position=vec4(p.x/uRes.x*2.-1., 1.-p.y/uRes.y*2., 0., 1.); }';
 
+  // Background: scene colour + topographic contour lines (isolines of a slowly drifting noise field).
   var FS_BG = '#version 300 es\nprecision highp float; in vec2 vP; out vec4 o;\n' +
-    'uniform vec3 uBg; uniform vec3 uGrid; uniform float uOff; uniform vec2 uMaskC; uniform vec2 uMaskR; uniform vec2 uA;\n' +
-    'float ln(float v,float st){ float x=abs(fract(v/st-.5)-.5)*st; return 1.-smoothstep(.0,1.15,x); }\n' +
-    'void main(){ float py=vP.y-uOff; float g=max(max(ln(vP.x,48.),ln(py,48.))*uA.x, max(ln(vP.x,192.),ln(py,192.))*uA.y);\n' +
-    ' float m=1.-smoothstep(.25,.78,length((vP-uMaskC)/uMaskR)); vec3 c=mix(uBg,uGrid,g*m);\n' +
+    'uniform vec3 uBg; uniform vec3 uGrid; uniform float uOff; uniform vec2 uMaskC; uniform vec2 uMaskR; uniform vec2 uA; uniform float uTime;\n' +
+    'float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }\n' +
+    'float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x), mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x), f.y); }\n' +
+    'float fbm(vec2 p){ float a=.5, s=0.; for(int i=0;i<4;i++){ s+=a*vn(p); p=p*2.03+vec2(17.,9.); a*=.5; } return s; }\n' +
+    'float iso(float v){ float d=abs(fract(v-.5)-.5)/max(fwidth(v),1e-4); return 1.-smoothstep(0.,1.3,d); }\n' +
+    'void main(){\n' +
+    ' vec2 q=vec2(vP.x,vP.y-uOff)/300.+vec2(uTime*.000022,-uTime*.000015);\n' +
+    ' float n=fbm(q)*15.;\n' +
+    ' float g=max(iso(n)*uA.x, iso(n/5.+.31)*uA.y);\n' +
+    ' float m=1.-smoothstep(.2,.8,length((vP-uMaskC)/uMaskR)); vec3 c=mix(uBg,uGrid,g*m);\n' +
     ' c+=(fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453)-.5)/255.; o=vec4(c,1.); }';
 
   var VS_LINE = '#version 300 es\nlayout(location=0) in vec2 aA; layout(location=1) in vec2 aB; layout(location=2) in vec4 aC; layout(location=3) in vec2 aW;\n' +
@@ -463,8 +470,9 @@
       var mh = ((pinned || hero) ? vh * 1.32 : s.h * 1.32) / 2 * 1.4142;
       gl.uniform4f(U(P.bg, 'uRect'), 0, sr.top, vw, s.h);
       gl.uniform3f(U(P.bg, 'uBg'), light ? 0.9608 : 0, light ? 0.9608 : 0, light ? 0.9686 : 0);
-      gl.uniform3f(U(P.bg, 'uGrid'), light ? 0 : 1, light ? 0 : 1, light ? 0 : 1);
-      gl.uniform2f(U(P.bg, 'uA'), light ? 0.05 : 0.06, light ? 0.11 : 0.13);
+      gl.uniform3f(U(P.bg, 'uGrid'), light ? 0 : 0.55, light ? 0 : 0.85, light ? 0 : 1);
+      gl.uniform2f(U(P.bg, 'uA'), light ? 0.06 : 0.095, light ? 0.14 : 0.21);
+      gl.uniform1f(U(P.bg, 'uTime'), motion ? t : 0);
       gl.uniform1f(U(P.bg, 'uOff'), off);
       gl.uniform2f(U(P.bg, 'uMaskC'), mc[0], mc[1]);
       gl.uniform2f(U(P.bg, 'uMaskR'), vw / 2 * 1.4142, mh);

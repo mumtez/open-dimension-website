@@ -57,20 +57,6 @@ html.lenis, html.lenis body { height: auto; }
 [data-theme="light"] .eyebrow { color: var(--muted-light); }
 .stage { position: sticky; top: 0; height: var(--vh); overflow: clip; }
 
-/* Plain CSS grid, only for browsers without WebGL2 (the GL renderer draws its own). */
-.grid {
-  position: absolute; inset: -16vh 0; pointer-events: none;
-  --g1: rgba(255,255,255,.06); --g2: rgba(255,255,255,.13);
-  background-image:
-    linear-gradient(var(--g2) 1px, transparent 1px), linear-gradient(90deg, var(--g2) 1px, transparent 1px),
-    linear-gradient(var(--g1) 1px, transparent 1px), linear-gradient(90deg, var(--g1) 1px, transparent 1px);
-  background-size: 192px 192px, 192px 192px, 48px 48px, 48px 48px;
-  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 25%, transparent 78%);
-          mask-image: radial-gradient(ellipse at 50% 50%, #000 25%, transparent 78%);
-}
-.scene[data-theme="light"] .grid { --g1: rgba(0,0,0,.05); --g2: rgba(0,0,0,.11); }
-.gl .grid { display: none; }
-
 /* ---------- Glass: CSS fallback; with WebGL2 the shader draws the pane and the element only holds content ---------- */
 .glass {
   position: relative; overflow: hidden;
