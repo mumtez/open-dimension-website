@@ -226,7 +226,7 @@
   })();
   var tq = [0, 0, 0, 0], tpts = new Float32Array(16 * 3);
   function rot4(p, a, b, ang) { var c = Math.cos(ang), s = Math.sin(ang), x = p[a], y = p[b]; p[a] = x * c - y * s; p[b] = x * s + y * c; }
-  var TESS_COL = [[0.39, 0.82, 1], [0.75, 0.59, 1]], TESS_SC = [1, 0.52], TESS_W = [1.4, 1], TESS_G = [0.55, 0.4];
+  var TESS_COL = [0.39, 0.82, 1];
   var INK = [0.12, 0.12, 0.14], BLUE = [0.04, 0.52, 1];
 
   /* ================= WebGL2 renderer ================= */
@@ -393,22 +393,19 @@
     var cx = r.left + r.width / 2, cy = r.top + r.height / 2 + state.heroP * vh * 0.5, R = Math.min(r.width, r.height) * 0.2 * state.tessScale * (0.8 + 0.2 * intro);
     var sp = Math.min(state.sp, 1.2), tm = motion ? t : 0;
     var axw = tm * 0.00042 + sp * 2.6 + pointer.sx * 0.9, ayz = tm * 0.00027 + sp * 1.8 + pointer.sy * 0.9, azw = tm * 0.00019;
-    var al = state.tessAlpha * intro, layer, i, e, a, b, col, sc;
-    for (layer = 0; layer < 2; layer++) {
-      var dir = layer ? -1 : 1; col = TESS_COL[layer]; sc = TESS_SC[layer];
-      for (i = 0; i < 16; i++) {
-        var v = T4.v[i]; tq[0] = v[0]; tq[1] = v[1]; tq[2] = v[2]; tq[3] = v[3];
-        rot4(tq, 0, 3, axw * dir); rot4(tq, 1, 2, ayz * dir); rot4(tq, 2, 3, azw); rot4(tq, 0, 1, 0.3 + sp);
-        var k = 1 / (2.5 - tq[3]), q2 = tq[2] * k, s = 3 / (3 - q2 * 1.4);
-        tpts[i * 3] = cx + tq[0] * k * s * R * 2.1 * sc; tpts[i * 3 + 1] = cy + tq[1] * k * s * R * 2.1 * sc; tpts[i * 3 + 2] = q2;
-      }
-      for (e = 0; e < T4.e.length; e++) {
-        a = T4.e[e][0] * 3; b = T4.e[e][1] * 3;
-        var dd = clamp(0.5 + (tpts[a + 2] + tpts[b + 2]) * 0.9);
-        push(tpts[a], tpts[a + 1], tpts[b], tpts[b + 1], col[0], col[1], col[2], (0.2 + dd * 0.8) * al, TESS_W[layer], TESS_G[layer]);
-      }
-      for (i = 0; i < 16; i++) push(tpts[i * 3] - 2.5, tpts[i * 3 + 1], tpts[i * 3] + 2.5, tpts[i * 3 + 1], col[0], col[1], col[2], 0.95 * al, layer ? 3 : 4.5, 1.2);
+    var al = state.tessAlpha * intro, i, e, a, b;
+    for (i = 0; i < 16; i++) {
+      var v = T4.v[i]; tq[0] = v[0]; tq[1] = v[1]; tq[2] = v[2]; tq[3] = v[3];
+      rot4(tq, 0, 3, axw); rot4(tq, 1, 2, ayz); rot4(tq, 2, 3, azw); rot4(tq, 0, 1, 0.3 + sp);
+      var k = 1 / (2.5 - tq[3]), q2 = tq[2] * k, s = 3 / (3 - q2 * 1.4);
+      tpts[i * 3] = cx + tq[0] * k * s * R * 2.1; tpts[i * 3 + 1] = cy + tq[1] * k * s * R * 2.1; tpts[i * 3 + 2] = q2;
     }
+    for (e = 0; e < T4.e.length; e++) {
+      a = T4.e[e][0] * 3; b = T4.e[e][1] * 3;
+      var dd = clamp(0.5 + (tpts[a + 2] + tpts[b + 2]) * 0.9);
+      push(tpts[a], tpts[a + 1], tpts[b], tpts[b + 1], TESS_COL[0], TESS_COL[1], TESS_COL[2], (0.2 + dd * 0.8) * al, 1.4, 0.55);
+    }
+    for (i = 0; i < 16; i++) push(tpts[i * 3] - 2.5, tpts[i * 3 + 1], tpts[i * 3] + 2.5, tpts[i * 3 + 1], TESS_COL[0], TESS_COL[1], TESS_COL[2], 0.95 * al, 4.5, 1.2);
   }
 
   // Vision schematic, drawn on as you scroll. Item i has local progress f in 0..1.
