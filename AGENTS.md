@@ -9,4 +9,5 @@ Issues are tracked in this repo's GitHub Issues via the `gh` CLI. See `docs/agen
 - Design constraints and retired ideas: `docs/design-principles.md`.
 - Couplings between CSS, JS and HTML, plus commands: `docs/architecture.md`.
 - Review rules: `CODING_STANDARDS.md`.
+- Publishing (public repo, GitHub Pages, DNS, gotchas): `docs/deploying.md`.
 - Verify with `npm run check`; for visual changes also `npm run shoot` and read `shots/sheet-desktop.png`.

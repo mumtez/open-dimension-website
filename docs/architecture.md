@@ -15,4 +15,9 @@ No build step. `index.html`, `styles.css`, `main.js`, plus `assets/vendor/lenis.
 
 ## Commands
 
-`npm run serve` (http://localhost:8080), `npm run shoot [mobile]` (contact sheet in `shots/`), `npm run check` (syntax, eslint, stylelint, smoke test). Add `?perf` to the URL for a frame-time overlay.
+- `npm run serve`: http://localhost:8080.
+- `npm run shoot [mobile] [scene[:px]...]`: contact sheet in `shots/` (for example `npm run shoot -- hero studio:1200`).
+- `npm run probe -- <scene[:px]>... [--eval "<js>"]`: print measurements at scroll stops (default: the section indicator text).
+- `npm run build`: assemble `_site/`, exactly what is deployed.
+- `npm run check`: syntax, commit emails, eslint, stylelint, smoke test on `_site/`.
+- Add `?perf` to the URL for a frame-time overlay.

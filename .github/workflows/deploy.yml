@@ -18,12 +18,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Assemble the site (only the files visitors need)
-        run: |
-          mkdir _site
-          cp index.html styles.css main.js _site/
-          cp -r assets _site/assets
-          echo "open-dimension.com" > _site/CNAME
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Assemble the site (only the files the page references)
+        run: node scripts/build-site.mjs
       - uses: actions/upload-pages-artifact@v3
         with: { path: _site }
       - id: deployment

@@ -1,7 +1,8 @@
 // npm run check calls this: loads the page and fails on any script error, missing ready/gl state, or broken pin.
 import { serve, launch, collectErrors, goToScene, SETTLE_MS } from './lib.mjs';
+import { buildSite } from './build-site.mjs';
 
-const { server, url } = await serve();
+const { server, url } = await serve(0, buildSite().dir);   // test exactly what gets deployed
 const browser = await launch();
 const failures = [];
 try {

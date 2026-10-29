@@ -4,9 +4,11 @@
   "type": "module",
   "scripts": {
     "serve": "node scripts/serve.mjs",
-    "check": "node --check main.js && eslint main.js scripts && stylelint styles.css && node scripts/smoke.mjs",
+    "check": "node --check main.js && node scripts/check-emails.mjs && eslint main.js scripts && stylelint styles.css && node scripts/smoke.mjs",
     "shoot": "node scripts/shoot.mjs",
-    "prepare": "git config core.hooksPath .githooks"
+    "prepare": "git config core.hooksPath .githooks",
+    "probe": "node scripts/probe.mjs",
+    "build": "node scripts/build-site.mjs"
   },
   "devDependencies": {
     "eslint": "^9.0.0",

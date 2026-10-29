@@ -8,11 +8,11 @@ import { chromium } from 'playwright';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.png': 'image/png', '.svg': 'image/svg+xml' };
 
-export function serve(port = 0) {
+export function serve(port = 0, root = ROOT) {
   const server = http.createServer((req, res) => {
     const url = decodeURIComponent(req.url.split('?')[0]);
-    const file = path.join(ROOT, url === '/' ? 'index.html' : url);
-    if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); return res.end(); }
+    const file = path.join(root, url === '/' ? 'index.html' : url);
+    if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream' });
     fs.createReadStream(file).pipe(res);
   });
@@ -40,3 +40,18 @@ export async function goToScene(page, id, offset = 0, wait = 2500) {
   await page.evaluate((v) => window.scrollTo(0, v), y);
   await page.waitForTimeout(wait);
 }
+
+// Scene stops for shoot/probe: "studio", "studio:1200" (scene top plus px). "hero" is the page top.
+const SCENE_IDS = { hero: 'top', vision: 'vision', products: 'products', studio: 'studio', contact: 'contact' };
+export function parseArgs(argv) {
+  const out = { mobile: false, evalExpr: null, stops: [] };
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === 'mobile' || argv[i] === '--mobile') out.mobile = true;
+    else if (argv[i] === '--eval') out.evalExpr = argv[++i];
+    else { const [name, off] = argv[i].split(':'); if (SCENE_IDS[name]) out.stops.push({ label: argv[i], id: SCENE_IDS[name], offset: Number(off) || 0 }); }
+  }
+  return out;
+}
+export const contextOptions = (mobile) => mobile
+  ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true }
+  : { viewport: { width: 1280, height: 800 } };

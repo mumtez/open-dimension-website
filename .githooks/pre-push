@@ -1,0 +1,3 @@
+#!/bin/sh
+# Last line of defence for the public repo: no personal email in pushed history.
+exec node scripts/check-emails.mjs
